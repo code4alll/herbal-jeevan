@@ -5,17 +5,19 @@ import javax.validation.ConstraintValidatorContext;
 
 import com.ecommerce.HerbalJeevan.Model.UserModel;
 import com.ecommerce.HerbalJeevan.Validation.UserValidValues;
+import com.nimbusds.oauth2.sdk.util.StringUtils;
 
 public class UserValidator implements ConstraintValidator<UserValidValues, UserModel>{
 
 	@Override
 	public boolean isValid(UserModel value, ConstraintValidatorContext context) {
-		boolean name=validateName(context,value);
+		boolean firstname=validateFirstName(context,value);
+		boolean lastname=validateLastName(context, value);
 		boolean email=validateEmail(context,value);
 //		boolean number=validateNumber(context,value);
 		boolean password=validatePassword(context,value);
 		
-		if((name&&email&&password)||(value.getFlag()!=null&&value.getFlag())) {
+		if((firstname&&lastname&&email&&password)||(value.getFlag()!=null&&value.getFlag())) {
 			return true;
 		}
 		return false;
@@ -26,7 +28,7 @@ public class UserValidator implements ConstraintValidator<UserValidValues, UserM
 	    private boolean validatePassword(ConstraintValidatorContext context, UserModel value) {
 	        if (value.getPassword() == null || value.getPassword().isEmpty()) {
 	            context.disableDefaultConstraintViolation();
-	            context.buildConstraintViolationWithTemplate("Password is mandatory").addConstraintViolation();
+	            context.buildConstraintViolationWithTemplate("Password is mandatory").addPropertyNode("password").addConstraintViolation();
 	            return false;
 	        }
 	        String passwordRegex = "^(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$";
@@ -58,7 +60,7 @@ public class UserValidator implements ConstraintValidator<UserValidValues, UserM
 	    private boolean validateEmail(ConstraintValidatorContext context, UserModel value) {
 	        if (value.getEmail() == null || value.getEmail().isEmpty()) {
 	            context.disableDefaultConstraintViolation();
-	            context.buildConstraintViolationWithTemplate("Email is mandatory").addConstraintViolation();
+	            context.buildConstraintViolationWithTemplate("Email is mandatory").addPropertyNode("email").addConstraintViolation();
 	            return false;
 	        }
 	        String emailRegex = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$";
@@ -75,12 +77,16 @@ public class UserValidator implements ConstraintValidator<UserValidValues, UserM
 	        return true;
 	    }
 
-	    private boolean validateName(ConstraintValidatorContext context, UserModel value) {
-	        if (value.getFirstname() == null ||value.getFirstname() == null) {
+	    private boolean validateFirstName(ConstraintValidatorContext context, UserModel value) {
+	    	
+	        if (StringUtils.isBlank(value.getFirstname())) {
+	        	
 	            context.disableDefaultConstraintViolation();
-	            context.buildConstraintViolationWithTemplate("Name is mandatory").addPropertyNode("email").addConstraintViolation();
+	            context.buildConstraintViolationWithTemplate("First Name is mandatory").addPropertyNode("firstname").addConstraintViolation();
 	            return false;
 	        }
+	        
+         
 	        String nameRegex = "^[A-Za-z\\s]+$"; // Only alphabets and spaces allowed
 	        if (!value.getFirstname().matches(nameRegex)||!value.getLastname().matches(nameRegex)) {
 	            context.disableDefaultConstraintViolation();
@@ -89,7 +95,47 @@ public class UserValidator implements ConstraintValidator<UserValidValues, UserM
 	        }
 	        return true;
 	    }
-	
+	    
+    private boolean validateLastName(ConstraintValidatorContext context, UserModel value) {
+	    	
+	       
+	        
+           if (StringUtils.isBlank(value.getLastname())) {
+	        	
+	            context.disableDefaultConstraintViolation();
+	            context.buildConstraintViolationWithTemplate("Last Name is mandatory").addPropertyNode("lastname").addConstraintViolation();
+	            return false;
+	        }
+	        String nameRegex = "^[A-Za-z\\s]+$"; // Only alphabets and spaces allowed
+	        if (!value.getFirstname().matches(nameRegex)||!value.getLastname().matches(nameRegex)) {
+	            context.disableDefaultConstraintViolation();
+	            context.buildConstraintViolationWithTemplate("Name must only contain alphabets").addPropertyNode("lastname").addConstraintViolation();
+	            return false;
+	        }
+	        return true;
+	    }
 
+	        
+	    
+	    
+   private boolean validateName2(ConstraintValidatorContext context, UserModel value) {
+	
+    if (value.getLastname() == null  || value.getLastname().isEmpty()) {
+    	
+        context.disableDefaultConstraintViolation();
+        context.buildConstraintViolationWithTemplate("Name is mandatory").addPropertyNode("Lastname").addConstraintViolation();
+        return false;
+    }
+    String nameRegex = "^[A-Za-z\\s]+$"; // Only alphabets and spaces allowed
+    if (!value.getFirstname().matches(nameRegex)||!value.getLastname().matches(nameRegex)) {
+        context.disableDefaultConstraintViolation();
+        context.buildConstraintViolationWithTemplate("Name must only contain alphabets").addPropertyNode("Lastname").addConstraintViolation();
+        return false;
+    }
+	return true; 
+   }
 }
 
+
+
+    
