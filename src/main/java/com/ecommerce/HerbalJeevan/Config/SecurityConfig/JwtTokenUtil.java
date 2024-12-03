@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.ecommerce.HerbalJeevan.Enums.Roles;
+import com.ecommerce.HerbalJeevan.Enums.Status;
 import com.ecommerce.HerbalJeevan.Model.UserModel;
 import com.ecommerce.HerbalJeevan.Repository.UserRepo;
 
@@ -97,7 +98,7 @@ public class JwtTokenUtil {
 		UserModel user=new UserModel();
 		if(userName!=null) {
 			try {
-				 user=userRepo.findByUsernameAndRole(userName, role).orElse(null);
+				 user=userRepo.findByUsernameAndRoleAndIsVerified(userName, role,Status.ACTIVE).orElse(null);
 
 			}
 			catch(Exception e){
