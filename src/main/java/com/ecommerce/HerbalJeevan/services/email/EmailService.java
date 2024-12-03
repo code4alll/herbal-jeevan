@@ -96,11 +96,11 @@ public class EmailService {
 	            "<body style=\"font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4;\">\n" +
 	            "    <div style=\"max-width: 90vw; margin: 20px auto; padding: 20px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);\">\n" +
 	            "        "
-	            + "<div style><h1 style=\"color: #333333;\">Welcome to Ulinkit!</h1>\n" +
+	            + "<div style><h1 style=\"color: #333333;\">Welcome to Herbal Jivan!</h1>\n" +
 	            "        <p style=\"color: #666666;\">Dear User,</p>\n" +
-	            "        <p style=\"color: #666666;\">We are thrilled to have you on board. Thank you for choosing Ulinkit.com </p>\n" +
+	            "        <p style=\"color: #666666;\">We are thrilled to have you on board. Thank you for choosing Herbal Jivan.com </p>\n" +
 	            "        <p style=\"color: #666666;\"> "+text +" </p>\n" +
-	            "        <a href=\"www.ulinkit.com\" style=\"display: inline-block; padding: 10px 20px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 5px;\">Get Started</a>\n" +
+	            "        <a href=\"www.herbalJivan.com\" style=\"display: inline-block; padding: 10px 20px; background-color: #007bff; color: #ffffff; text-decoration: none; border-radius: 5px;\">Get Started</a>\n" +
 	            "        <p style=\"color: #666666;\">If you have any questions or need assistance, feel free to <a href=\"#\" style=\"color: #007bff;\">contact us</a>.</p>\n" +
 	            "        <p style=\"color: #666666;\">Best Regards,<br/>Ulinkit.com</p>\n" +
 	            "    <div style=\\\"max-width: 600px; margin: 20px auto; padding: 20px; background-color: #ffffff; border-radius: 20px; border:2px solid gray; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);\\>"
@@ -304,7 +304,7 @@ public class EmailService {
     			"    <div class=\"container\">\r\n" + 
     			"        <div class=\"upper-part\">\r\n" + 
     			"            <div class=\"lock-icon\"></div>\r\n" + 
-    			"            <div class=\"text\"> <p>Hi "+name+", Welcome to Ulinkit!</p> </div>\r\n" + 
+    			"            <div class=\"text\"> <p>Hi "+name+", Welcome to Herbal jivan!</p> </div>\r\n" + 
     			"        </div>\r\n" + 
     			"        <div class=\"lower-part\">\r\n" + 
     			"            <p><b>"+text+"</b></p>\r\n" + 
@@ -313,7 +313,7 @@ public class EmailService {
     			"            </div>\r\n" + 
     			"        </div>\r\n" + 
     			"        <div class=\"footer\">\r\n" + 
-    			"            <p>&copy; 2024 <a href=\"https://www.ulinkit.com\" target=\"_blank\">Ulinkit.com</a> All rights reserved.</p>\r\n" + 
+    			"            <p>&copy; 2024 <a href=\"https://www.HerbalJivan.com\" target=\"_blank\">HerbalJivan.com</a> All rights reserved.</p>\r\n" + 
     			"        </div>\r\n" + 
     			"    </div>\r\n" + 
     			"</body>\r\n" + 

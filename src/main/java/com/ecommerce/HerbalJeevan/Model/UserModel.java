@@ -31,6 +31,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import com.ecommerce.HerbalJeevan.Enums.Roles;
+import com.ecommerce.HerbalJeevan.Enums.Status;
 import com.ecommerce.HerbalJeevan.Enums.UserPermission;
 import com.ecommerce.HerbalJeevan.Validation.UserValidValues;
 
@@ -129,22 +130,24 @@ public class UserModel implements UserDetailsService,Serializable {
      @Enumerated(EnumType.STRING)
      private Roles role;
      
-     @Column(name="is_verified", columnDefinition="BOOLEAN DEFAULT false")
-     private Boolean isVerified;
+     @Column(name="is_verified")
+     @Enumerated(EnumType.STRING)
+     private Status isVerified;
      
      @Transient
      private Boolean flag;
      
      
      
-     public Boolean getIsVerified() {
-		return isVerified;
-	}
-	public void setIsVerified(Boolean isVerified) {
-		this.isVerified = isVerified;
-	}
+
 
 	
+	public Status getIsVerified() {
+		return isVerified;
+	}
+	public void setIsVerified(Status isVerified) {
+		this.isVerified = isVerified;
+	}
 	public String getUserId() {
 		return userId;
 	}
@@ -248,7 +251,7 @@ public class UserModel implements UserDetailsService,Serializable {
 	        return permissions.contains(permission);
 	    }
 	public UserModel(String id, String email, String firstname, String lastname, String country, Roles role,
-			Boolean isVerified) {
+			Status isVerified) {
 		super();
 		this.userId = id;
 		this.email = email;

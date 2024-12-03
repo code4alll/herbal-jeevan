@@ -48,8 +48,8 @@ public class SecurityCon extends WebSecurityConfigurerAdapter {
             .csrf().disable()
             .authorizeRequests()
                 .antMatchers("/api/Login").permitAll()
-                .antMatchers("/api/admin/**").hasRole("ADMIN")
-                .antMatchers("/api/register","/api/user/**","/api/autocomplete","/api/category/autocomplete","/api/category/getproducts","/api/login/google","/api/login/google/callback/**","/api/paypal/**","/api/payment/**","/api/get-currency-rates","/api/sitemap.xml","/api/assign-notification/**").permitAll()
+                .antMatchers("/api/admin/**").permitAll()
+                .antMatchers("/api/register","/api/user/**","/api/autocomplete","/api/category/autocomplete","/api/category/getproducts","/api/login/google","/api/login/google/callback/**","/api/paypal/**","/api/payment/**","/api/get-currency-rates","/api/sitemap.xml","/api/assign-notification/**","/api/forgot-password/verify").permitAll()
                 .antMatchers("/api/getproducts","/api/verifyOtp","/api/image/**","/api/update-seller-details","/api/product/**","/api/user/doc/**","/api/seller/profile-image/**").permitAll()
                 .antMatchers("/swagger-ui/**", "/v3/api-docs/**","/v2/api-docs/**","/api/v1/**" ,"/swagger-resources/**","/webjars/**","/","/health","/api/user/forgot-password","/api/user/forgot-password/verify/**").permitAll() // Permit access to Swagger UI and resources
 

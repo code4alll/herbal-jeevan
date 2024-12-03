@@ -24,8 +24,8 @@ public class OTPservices {
     
 
     
-    public OtpVerificationStatus verifyOtp(String email,String otp) {
-        OTPDetails otpDetails = otpMap.get(email);
+    public static OtpVerificationStatus verifyOtp(String email,String otp) {
+        OTPDetails otpDetails = otpMap.get(email.toLowerCase());
         
         if (otpDetails != null && otpDetails.getOtp().equals(otp)) {
             // Check if OTP is expired
@@ -57,7 +57,8 @@ public class OTPservices {
         }
     }
     
-    public String saveOtpDetails(DetailsUpdateType type,String username,String data) {
+    public static String saveOtpDetails(DetailsUpdateType type,String u,String data) {
+    	String username=u.toLowerCase();
     	String otp=generateOTP(6);
     	if(userVerification.containsKey(username)) {
     		Map<DetailsUpdateType,OTPDetails> details=userVerification.get(username);
@@ -76,7 +77,7 @@ public class OTPservices {
     
     public String saveOtpDetails(String username) {
     	String otp=generateOTP(6);
-    	otpMap.put(username,new OTPDetails(otp,LocalDateTime.now(),null));
+    	otpMap.put(username.toLowerCase(),new OTPDetails(otp,LocalDateTime.now(),null));
     	return otp;
     }
     
@@ -145,10 +146,10 @@ public class OTPservices {
 	@SuppressWarnings("unchecked")
 	public Response verifyVerificationOtp(String otp, String type, String username) {
 		
-		if(!userVerification.containsKey(username)) {
+		if(!userVerification.containsKey(username.toLowerCase())) {
 			return new Response(false,"user details not found !!");
 		}
-		Map<DetailsUpdateType,OTPDetails> details=userVerification.get(username);
+		Map<DetailsUpdateType,OTPDetails> details=userVerification.get(username.toLowerCase());
 		if(details==null) {
 			return new Response(false,"user details not found !!");
 
@@ -181,10 +182,10 @@ public class OTPservices {
 	}
 
 	public void InvalidateOtp(String type, String username) {
-		if(!userVerification.containsKey(username)) {
+		if(!userVerification.containsKey(username.toLowerCase())) {
 			return;
 		}
-		Map<DetailsUpdateType,OTPDetails> details=userVerification.get(username);
+		Map<DetailsUpdateType,OTPDetails> details=userVerification.get(username.toLowerCase());
 		if(details==null) {
 			return;
 
@@ -195,8 +196,8 @@ public class OTPservices {
 
 		}
 		details.remove(DetailsUpdateType.fromString(type));
-		if(userVerification.containsKey(username)&&userVerification.get(username)==null) {
-			userVerification.remove(username);
+		if(userVerification.containsKey(username.toLowerCase())&&userVerification.get(username.toLowerCase())==null) {
+			userVerification.remove(username.toLowerCase());
 		}
 		
 		

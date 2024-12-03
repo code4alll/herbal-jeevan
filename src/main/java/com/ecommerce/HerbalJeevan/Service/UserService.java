@@ -1,8 +1,6 @@
 package com.ecommerce.HerbalJeevan.Service;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -11,25 +9,29 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 
-import org.apache.catalina.Manager;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.ecommerce.HerbalJeevan.Config.SecurityConfig.JwtBlacklistService;
 import com.ecommerce.HerbalJeevan.Config.SecurityConfig.JwtTokenUtil;
-import com.ecommerce.HerbalJeevan.DTO.AddressResponseDTO;
 import com.ecommerce.HerbalJeevan.DTO.LoginDto;
 import com.ecommerce.HerbalJeevan.DTO.LoginResponse;
 import com.ecommerce.HerbalJeevan.DTO.RegisterDto;
+import com.ecommerce.HerbalJeevan.Enums.DetailsUpdateType;
 import com.ecommerce.HerbalJeevan.Enums.Roles;
+import com.ecommerce.HerbalJeevan.Enums.Status;
 import com.ecommerce.HerbalJeevan.Model.Admin;
 import com.ecommerce.HerbalJeevan.Model.User;
-import com.ecommerce.HerbalJeevan.Model.UserAddress;
 import com.ecommerce.HerbalJeevan.Model.UserModel;
 import com.ecommerce.HerbalJeevan.Repository.UserRepo;
 import com.ecommerce.HerbalJeevan.Utility.Response;
+import com.ecommerce.HerbalJeevan.services.email.EmailService;
+import com.ecommerce.HerbalJeevan.services.email.OTPservices;
+
+import io.jsonwebtoken.Claims;
 
 @Service
 public class UserService {
@@ -45,6 +47,13 @@ public class UserService {
 	    
 	    @Autowired
 	    private JwtBlacklistService jwtBlacklistService;
+	    
+	    @Autowired 
+	    private EmailService emailService;
+	    
+	    @Autowired
+	    private OTPservices otpService;
+	    
 
 	public Response<?> registerUser(RegisterDto user, Roles role) {
 	    // Create a validator only once
@@ -55,10 +64,14 @@ public class UserService {
 	    Map<String, String> errorMap = new HashMap<>();
 
 	    try {
+	    	
+	    	
 	        // Create user entity based on role
-	        UserModel userEntity = (role.equals(Roles.USER)) ? 
-	            new User(user.getEmail(), user.getPassword(), user.getEmail(), user.getFirstname(), user.getLastname(), null) :
-	            new Admin(user.getEmail(), user.getPassword(), user.getEmail(), user.getFirstname(), user.getLastname(), null);
+	        UserModel userEntity = userRepo.findByUsernameAndRoleAndIsVerified(user.getEmail(), role, Status.INACTIVE).orElse((role.equals(Roles.USER)) ? 
+		            new User(user.getEmail(), user.getPassword(), user.getEmail(), user.getFirstname(), user.getLastname(), null) :
+			            new Admin(user.getEmail(), user.getPassword(), user.getEmail(), user.getFirstname(), user.getLastname(), null));
+	        		
+	        		userEntity.setPassword(user.getPassword());
 
 	        userEntity.setRole(role);
 
@@ -81,9 +94,16 @@ public class UserService {
 	        // Encode password and save user entity
 	        userEntity.setPassword(passwordEncoder.encode(userEntity.getPassword()));
 	        userEntity.setFlag(true);
+	        userEntity.setIsVerified(Status.INACTIVE);
 	        userRepo.save(userEntity);
+	        
+	       Response<?> res=SendVerificationOtp(userEntity.getEmail(), userEntity.getFirstname());
+	        if(res!=null&&!res.getStatus()) {
+	        	return new Response<>(true, "Error While sending otp", res.getMessage());
+	        }
+	        
 
-	        return new Response<>(true, "User created successfully", "User saved");
+	        return res;
 
 	    } catch (Exception e) {
 	        // Log and handle unexpected errors
@@ -95,7 +115,7 @@ public class UserService {
 	
 	 public boolean isEmailAlreadyRegistered(String email,Roles role) {
 	    	
-         return (userRepo.existsByEmailAndRole(email,role)||userRepo.existsByUsernameAndRole(email, role));
+         return (userRepo.existsByEmailRoleAndIsVerified(email,role,Status.ACTIVE)||userRepo.existsByUsernameRoleAndIsVerified(email, role,Status.ACTIVE));
     }
 
 
@@ -118,7 +138,7 @@ public class UserService {
 	        // Get role
 
 	        // Find user by username and role
-	        UserModel user = userRepo.findByUsernameAndRole(loginDto.getUsername(), role).orElse(null);
+	        UserModel user = userRepo.findByUsernameAndRoleAndIsVerified(loginDto.getUsername(), role,Status.ACTIVE).orElse(null);
 
 	        // Check if user exists and password matches
 	        if (user != null) {
@@ -158,8 +178,197 @@ public class UserService {
 	        e.printStackTrace();
 	        return new LoginResponse(loginDto.getUsername(), null, false, "An unexpected error occurred", null, null, null, null);
 	    }
+	    
+	    
+
+	}
+	
+    public Response SendVerificationOtp(String username,String name) {
+		String otp=otpService.saveOtpDetails(username);
+		String subject="Herbal Jivan Otp Verification";
+		String text=name+"_"+"Your Verification OTP".toUpperCase()+otp;
+		emailService.sendSimpleMessage(username, subject, text);
+		return new Response(true,"verification mail sent to : "+username);
 	}
 
 
+	public boolean verifyUser(String username) {
+		try {
+		UserModel user=userRepo.findByUsernameAndRoleAndIsVerified(username, Roles.USER,Status.INACTIVE ).orElse(null);
+		if(user!=null) {
+			user.setFlag(true);
+			user.setIsVerified(Status.ACTIVE);
+			userRepo.save(user);
+			return true;
+		}else {
+			return userRepo.existsByEmailRoleAndIsVerified(username, Roles.USER, Status.ACTIVE);
+		}
+
+	}catch(Exception e) {
+		e.printStackTrace();
+		return false;
+	}
 	
+	}
+
+
+	public User getUserDetails(String username) {
+		// TODO Auto-generated method stub
+		return (User)userRepo.findByUsernameAndRoleAndIsVerified(username, Roles.USER, Status.ACTIVE).orElse(null);
+	}
+	
+	public Admin getAdminDetails(String username) {
+		// TODO Auto-generated method stub
+		return (Admin)userRepo.findByUsernameAndRoleAndIsVerified(username, Roles.ADMIN, Status.ACTIVE).orElse(null);
+	}
+
+
+	public boolean verifyAdmin(String username) {try {
+		UserModel user=userRepo.findByUsernameAndRoleAndIsVerified(username, Roles.ADMIN,Status.INACTIVE ).orElse(null);
+		if(user!=null) {
+			user.setIsVerified(Status.ACTIVE);
+			user.setFlag(true);
+			userRepo.save(user);
+			return true;
+		}
+		else {
+			return userRepo.existsByEmailRoleAndIsVerified(username, Roles.ADMIN, Status.ACTIVE);
+		}
+
+	}catch(Exception e) {
+		e.printStackTrace();
+		return false;
+	}
+	}
+
+
+	public Boolean logoutUser(String token) {
+ 		
+        if (token != null) {
+            if (jwtTokenProvider.validateToken(token)) {
+            	Claims tokenClaims = jwtTokenProvider.decodeToken(token);
+            	
+                String user=(String)tokenClaims.get("username");
+                String contextUser=this.extractUsernameFromPrincipal(SecurityContextHolder.getContext().getAuthentication());
+                if(user!=null&&contextUser!=null&&user.equalsIgnoreCase(contextUser)) {
+               	 SecurityContextHolder.getContext().setAuthentication(null);
+               	 jwtBlacklistService.addToBlacklist(token);
+               	 return true;
+
+                }else {
+               	 jwtBlacklistService.addToBlacklist(token);
+               	 return true;
+                }
+                
+            }
+       	 jwtBlacklistService.addToBlacklist(token);
+       	 return true;
+	
+        }
+		return false;
+	}
+	
+	 public  String extractUsernameFromPrincipal(Authentication authentication ) {
+	        if (authentication != null && authentication.getPrincipal() instanceof com.ecommerce.HerbalJeevan.Config.SecurityConfig.ClaimedToken) {
+	        	com.ecommerce.HerbalJeevan.Config.SecurityConfig.ClaimedToken claimedToken = (com.ecommerce.HerbalJeevan.Config.SecurityConfig.ClaimedToken) authentication.getPrincipal();
+	            return claimedToken.getUsername(); // Assuming there's a method to get the username from ClaimedToken
+	        }
+	        return null; // Return null if principal is not an instance of ClaimedToken or if authentication is null
+	    }
+	 
+	 
+		public Response<Object> ForgotPassword(LoginDto updateDetails,Roles role) {
+			if(updateDetails.getUsername()==null||updateDetails.getPassword()==null||role==null) {
+				return new Response(false,"Please fill all the required fields",updateDetails);
+			}
+			
+			
+	        String passwordRegex = "^(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$";
+
+			 if (!updateDetails.getPassword().matches(passwordRegex)) {
+		           return new Response<>(false,"Wrong Password","Password must be at least 8 characters long, include an uppercase letter, a number, and a special character.");		      
+		        }
+		
+			UserModel user=null;
+			if(role.equals(Roles.USER)) {
+				user=getUserDetails(updateDetails.getUsername());
+				
+			}else {
+				user=getAdminDetails(updateDetails.getUsername());
+			}
+			if(user==null) {
+				return new Response(false,"user not exist for given user name");
+			}else { 
+				
+			String subject="Herbal Jivan Otp Verification";
+			 
+			
+			 String to=user.getEmail();
+			 
+			 
+			 String otp;
+				otp = OTPservices.saveOtpDetails(DetailsUpdateType.PASSWORD, user.getUsername(),this.passwordEncoder.encode(updateDetails.getPassword()));
+			
+			 String text=user.getFirstname()+"_"+"Your password update otp".toUpperCase()+otp;
+			 Response emailres=emailService.sendSimpleMessage(to, subject, text);
+			 
+			 if(emailres.getStatus()) {
+				 return new Response<>(true,"otp verification mail sent to: "+user.getEmail());
+
+			 }else {
+				 return new Response<>(false,"otp verification mail not sent to: "+user.getEmail(),emailres.getMessage());
+
+			 }
+			 }
+			
+			
+		}
+
+
+		public Response VerifyAndUpdatePassword(String otp, String username, Roles role) {
+
+			UserModel user=null;
+			if(otp==null||username==null||role==null) {
+				return new Response(false,"Enter all the required information to verify like username otp role");
+			}
+		
+			if(Roles.USER.equals(role)) {
+				user=getUserDetails(username);
+			}else {
+				user=getAdminDetails(username);
+			}
+			
+			
+			if(user==null) {
+				return new Response(false,"user not exist");
+			}
+
+			
+			
+			
+			Response response=otpService.verifyVerificationOtp(otp,"PASSWORD",user.getUsername());
+			if(response.getStatus()&&response.getMessage().equalsIgnoreCase("VERIFIED")) {
+				
+				
+					user.setPassword(response.getData().toString());
+				
+				SaveUserData(user);
+				
+				otpService.InvalidateOtp("password",user.getUsername());
+				
+				return new Response(true,"Otp Verified and "+"password".toUpperCase()+" Updated");
+
+			}
+			return response;
+		
+		}
+
+
+		private void SaveUserData(UserModel user) {
+			user.setFlag(true);
+			userRepo.save(user);
+			
+		}
+
+    //https://herbal-jeevan-9dl6.onrender.com
 }
