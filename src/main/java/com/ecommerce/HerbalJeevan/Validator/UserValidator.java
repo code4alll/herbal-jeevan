@@ -88,7 +88,7 @@ public class UserValidator implements ConstraintValidator<UserValidValues, UserM
 	        
          
 	        String nameRegex = "^[A-Za-z\\s]+$"; // Only alphabets and spaces allowed
-	        if (!value.getFirstname().matches(nameRegex)||!value.getLastname().matches(nameRegex)) {
+	        if (!value.getFirstname().matches(nameRegex)) {
 	            context.disableDefaultConstraintViolation();
 	            context.buildConstraintViolationWithTemplate("Name must only contain alphabets").addPropertyNode("firstname").addConstraintViolation();
 	            return false;
@@ -127,7 +127,7 @@ public class UserValidator implements ConstraintValidator<UserValidValues, UserM
         return false;
     }
     String nameRegex = "^[A-Za-z\\s]+$"; // Only alphabets and spaces allowed
-    if (!value.getFirstname().matches(nameRegex)||!value.getLastname().matches(nameRegex)) {
+    if (!value.getFirstname().matches(nameRegex)) {
         context.disableDefaultConstraintViolation();
         context.buildConstraintViolationWithTemplate("Name must only contain alphabets").addPropertyNode("Lastname").addConstraintViolation();
         return false;
