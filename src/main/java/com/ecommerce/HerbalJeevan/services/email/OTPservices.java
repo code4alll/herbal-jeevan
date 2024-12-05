@@ -29,7 +29,7 @@ public class OTPservices {
         
         if (otpDetails != null && otpDetails.getOtp().equals(otp)) {
             // Check if OTP is expired
-            if (otpDetails.getCreationTime().plusMinutes(10).isBefore(LocalDateTime.now())) {
+            if (otpDetails.getCreationTime().plusMinutes(15).isBefore(LocalDateTime.now())) {
                 return OtpVerificationStatus.EXPIRED;
             }
 
@@ -45,10 +45,9 @@ public class OTPservices {
         
         if (otpDetails != null && otpDetails.getOtp().equals(otp)) {
             // Check if OTP is expired
-            if (otpDetails.getCreationTime().plusMinutes(10).isBefore(LocalDateTime.now())) {
+            if (otpDetails.getCreationTime().plusMinutes(15).isBefore(LocalDateTime.now())) {
                 return OtpVerificationStatus.EXPIRED;
             }
-
             // OTP verification successful
             return OtpVerificationStatus.VERIFIED;
         } else {
@@ -139,7 +138,6 @@ public class OTPservices {
 			this.username = username;
 			this.isVerifed = isVerifed;
 		}
-		
 		
 	}
 
