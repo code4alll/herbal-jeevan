@@ -1,4 +1,4 @@
-package com.ecommerce.HerbalJeevan.services.email;
+package com.ecommerce.HerbalJeevan.Service;
 
 
 import java.time.LocalDateTime;

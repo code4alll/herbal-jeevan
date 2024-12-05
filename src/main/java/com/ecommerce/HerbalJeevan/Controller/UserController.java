@@ -19,9 +19,9 @@ import com.ecommerce.HerbalJeevan.DTO.emailResponseDto;
 import com.ecommerce.HerbalJeevan.Enums.DetailsUpdateType;
 import com.ecommerce.HerbalJeevan.Enums.OtpVerificationStatus;
 import com.ecommerce.HerbalJeevan.Enums.Roles;
+import com.ecommerce.HerbalJeevan.Service.OTPservices;
 import com.ecommerce.HerbalJeevan.Service.UserService;
 import com.ecommerce.HerbalJeevan.Utility.Response;
-import com.ecommerce.HerbalJeevan.services.email.OTPservices;
 
 @RestController
 @RequestMapping("/api")

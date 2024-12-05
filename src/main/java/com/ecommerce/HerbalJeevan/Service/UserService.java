@@ -29,7 +29,6 @@ import com.ecommerce.HerbalJeevan.Model.UserModel;
 import com.ecommerce.HerbalJeevan.Repository.UserRepo;
 import com.ecommerce.HerbalJeevan.Utility.Response;
 import com.ecommerce.HerbalJeevan.services.email.EmailService;
-import com.ecommerce.HerbalJeevan.services.email.OTPservices;
 
 import io.jsonwebtoken.Claims;
 
