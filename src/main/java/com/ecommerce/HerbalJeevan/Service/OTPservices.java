@@ -220,11 +220,10 @@ public class OTPservices {
 	                OTPDetails otpDetails = otpEntry.getValue();
 
 	                // Assuming the OTP expires after a certain duration (e.g., 5 minutes)
-	                if (otpDetails.getCreationTime().plusMinutes(5).isBefore(now)) {
+	                if (otpDetails.getCreationTime().plusMinutes(10).isBefore(now)) {
 	                    otpIterator.remove(); // Remove the expired OTP entry
 	                }
 	            }
-
 	            if (otpDetailsMap.isEmpty()) {
 	                userIterator.remove(); // Remove the user entry if no OTPs remain
 	            }
@@ -238,7 +237,7 @@ public class OTPservices {
 	            OTPDetails otpDetails = otpMapEntry.getValue();
 
 	            // Assuming the OTP expires after a certain duration (e.g., 5 minutes)
-	            if (otpDetails.getCreationTime().plusMinutes(5).isBefore(now)) {
+	            if (otpDetails.getCreationTime().plusMinutes(10).isBefore(now)) {
 	                otpMapIterator.remove(); // Remove the expired OTP entry
 	            }
 	        }

@@ -30,7 +30,7 @@ public class AdminController {
 		
 	}
 	
-	@GetMapping("/Login")
+	@PostMapping("/Login")
 	private  ResponseEntity<?> LoginAdmin(@RequestBody LoginDto user){
 		LoginResponse response=userService.LoginData(user,Roles.ADMIN);
 		Response<?> res=new Response<>();
@@ -42,6 +42,7 @@ public class AdminController {
 	    	return ResponseEntity.status(HttpStatus.OK).body(response);
 	    }
 	    else if(response.getMessage()!=null&&response.getToken()==null) {
+	    	
 	    	res=new Response<String>(false,response.getMessage(),response.getMessage());
 	    	return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
 	    }

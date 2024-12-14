@@ -11,10 +11,12 @@ import javax.validation.ValidatorFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.ecommerce.HerbalJeevan.Config.SecurityConfig.ClaimedToken;
 import com.ecommerce.HerbalJeevan.Config.SecurityConfig.JwtBlacklistService;
 import com.ecommerce.HerbalJeevan.Config.SecurityConfig.JwtTokenUtil;
 import com.ecommerce.HerbalJeevan.DTO.LoginDto;
@@ -368,6 +370,20 @@ public class UserService {
 			userRepo.save(user);
 			
 		}
+
+
+		 public  boolean hasSellerAuthority(Authentication authentication) {
+		        return authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_"+Roles.ADMIN.toString().toUpperCase()));
+		    }
+
+
+		public ClaimedToken getAuthenticatedUser(Object user) {
+     	    if (user instanceof ClaimedToken) {
+     	        return (ClaimedToken) user;
+     	    } else {
+     	        return null; // Or handle the case where user is not a ClaimedToken
+     	    }
+     	}
 
     //https://herbal-jeevan-9dl6.onrender.com
 }
