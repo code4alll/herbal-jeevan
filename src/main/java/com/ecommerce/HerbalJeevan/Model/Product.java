@@ -77,6 +77,8 @@ public class Product implements Serializable{
 	private String name;
 	
     private String sku;
+    private String availability;
+    private String quantity;
 
 	
 	@CreationTimestamp
@@ -206,6 +208,18 @@ public class Product implements Serializable{
 	}
 	public void setUpdatedDate(LocalDate updatedDate) {
 		this.updatedDate = updatedDate;
+	}
+	public String getAvailability() {
+		return availability;
+	}
+	public void setAvailability(String availability) {
+		this.availability = availability;
+	}
+	public String getQuantity() {
+		return quantity;
+	}
+	public void setQuantity(String quantity) {
+		this.quantity = quantity;
 	}
 	
 	

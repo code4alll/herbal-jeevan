@@ -101,6 +101,9 @@ public class ProductServiceImp implements ProductService {
 	ImageRepository imageRepo;
 	@Autowired
 	private ProductRepository ProductRepo;
+	
+	@Autowired
+	private ImageUploadService imageUploadService;
 
 	@Override
 	public boolean addProduct(productdto productDTO, List<ProductImageDTO> imageDTO, Admin user) throws IOException {
@@ -534,27 +537,28 @@ public class ProductServiceImp implements ProductService {
 	    int height = bufferedImage.getHeight();
 
 	    // Generate a unique filename
-	    String fileName = UUID.randomUUID().toString() + "_" + originalFilename;
+//	    String fileName = UUID.randomUUID().toString() + "_" + originalFilename;
 
 	    // Define the local directory to save the image (c/images)
 
 	    // Ensure the directory exists
-	    File directory = new File(imageUploadDir);
-	    if (!directory.exists()) {
-	        directory.mkdirs();  // Create the directory if it doesn't exist
-	    }
-
-	    // Create the local file path (path to save the image)
-	    File localFile = new File(imageUploadDir + fileName);
-
-	    // Write the image to the local filesystem
-	    ImageIO.write(bufferedImage, originalFilename.substring(originalFilename.lastIndexOf('.') + 1), localFile);
+//	    File directory = new File(imageUploadDir);
+//	    if (!directory.exists()) {
+//	        directory.mkdirs();  // Create the directory if it doesn't exist
+//	    }
+//
+//	    // Create the local file path (path to save the image)
+//	    File localFile = new File(imageUploadDir + fileName);
+//
+//	    // Write the image to the local filesystem
+//	    ImageIO.write(bufferedImage, originalFilename.substring(originalFilename.lastIndexOf('.') + 1), localFile);
 
 	    // Create and return the image metadata (local URL or file path)
+	    String imageUrl=imageUploadService.uploadImage(imageFile);
 	    imageUploadDTO imgdto = new imageUploadDTO();
 	    imgdto.setHeight(height);
 	    imgdto.setWidth(width);
-	    imgdto.setUrl(imagePath + "/api/product/image/" + fileName); // This will return the local file path (e.g., file:///c/images/filename)
+	    imgdto.setUrl(imageUrl); // This will return the local file path (e.g., file:///c/images/filename)
 
 	    return imgdto;
 	}
