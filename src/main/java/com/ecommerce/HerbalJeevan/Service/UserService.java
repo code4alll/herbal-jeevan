@@ -1,8 +1,12 @@
 package com.ecommerce.HerbalJeevan.Service;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -22,12 +26,17 @@ import com.ecommerce.HerbalJeevan.Config.SecurityConfig.JwtTokenUtil;
 import com.ecommerce.HerbalJeevan.DTO.LoginDto;
 import com.ecommerce.HerbalJeevan.DTO.LoginResponse;
 import com.ecommerce.HerbalJeevan.DTO.RegisterDto;
+import com.ecommerce.HerbalJeevan.DTO.SellerAddressDTO;
+import com.ecommerce.HerbalJeevan.DTO.UserAddressResponse;
+import com.ecommerce.HerbalJeevan.Enums.AddressType;
 import com.ecommerce.HerbalJeevan.Enums.DetailsUpdateType;
 import com.ecommerce.HerbalJeevan.Enums.Roles;
 import com.ecommerce.HerbalJeevan.Enums.Status;
 import com.ecommerce.HerbalJeevan.Model.Admin;
 import com.ecommerce.HerbalJeevan.Model.User;
+import com.ecommerce.HerbalJeevan.Model.UserAddress;
 import com.ecommerce.HerbalJeevan.Model.UserModel;
+import com.ecommerce.HerbalJeevan.Repository.UserAddressRepository;
 import com.ecommerce.HerbalJeevan.Repository.UserRepo;
 import com.ecommerce.HerbalJeevan.Utility.Response;
 import com.ecommerce.HerbalJeevan.services.email.EmailService;
@@ -54,6 +63,9 @@ public class UserService {
 	    
 	    @Autowired
 	    private OTPservices otpService;
+	    
+	    @Autowired
+	    private UserAddressRepository addressRepo;
 	    
 
 	public Response<?> registerUser(RegisterDto user, Roles role) {
@@ -214,6 +226,23 @@ public class UserService {
 
 
 	public User getUserDetails(String username) {
+		// TODO Auto-generated method stub
+		return (User)userRepo.findByUsernameAndRoleAndIsVerified(username, Roles.USER, Status.ACTIVE).orElse(null);
+	}
+	
+	 public  String GetUserEmail() {
+	    	Authentication authentication=SecurityContextHolder.getContext().getAuthentication();
+	        if (authentication != null && authentication.getPrincipal() instanceof ClaimedToken) {
+	            ClaimedToken claimedToken = (ClaimedToken) authentication.getPrincipal();
+	            return claimedToken.getUsername(); // Assuming there's a method to get the username from ClaimedToken
+	        }
+	        return null; // Return null if principal is not an instance of ClaimedToken or if authentication is null
+	    }
+	public User getUserDetails() {
+		String username=GetUserEmail();
+		if(username==null) {
+			return null;
+		}
 		// TODO Auto-generated method stub
 		return (User)userRepo.findByUsernameAndRoleAndIsVerified(username, Roles.USER, Status.ACTIVE).orElse(null);
 	}
@@ -384,6 +413,248 @@ public class UserService {
      	        return null; // Or handle the case where user is not a ClaimedToken
      	    }
      	}
+
+
+		public Response saveUserAddress(SellerAddressDTO address) {
+		       
+	    	User seller=getUserDetails();
+	        List<UserAddress> existingAddresses = seller.getAddress();
+
+	      
+
+	        UserAddress newAddress = convertToEntity(address);
+	        newAddress.setUserId(seller);
+
+	        Set<AddressType> newAddressTypes = getAddressTypes(address);
+	        if (newAddressTypes != null) {
+//	            newAddressTypes.add(AddressType.DEFAULT);
+	            newAddress.setAddressTypes(newAddressTypes);
+	        }
+
+	        addressRepo.save(newAddress);
+	        
+	        return new Response<>(true,"Address Saved",convertToResponseDTO(newAddress));
+	    }
+		
+		
+		private UserAddress convertToEntity(SellerAddressDTO sellerAddressDTO) {
+	        UserAddress UserAddress = new UserAddress();
+	        if (sellerAddressDTO.getAddress() != null) {
+	            UserAddress.setAddress(sellerAddressDTO.getAddress());
+	        }
+	        if (sellerAddressDTO.getSelectedOrigin() != null) {
+	            UserAddress.setSelectedOrigin(sellerAddressDTO.getSelectedOrigin());
+	        }
+	        if (sellerAddressDTO.getCity() != null) {
+	            UserAddress.setCity(sellerAddressDTO.getCity());
+	        }
+	        if (sellerAddressDTO.getArea() != null) {
+	            UserAddress.setArea(sellerAddressDTO.getArea());
+	        }
+	        if (sellerAddressDTO.getStreet() != null) {
+	            UserAddress.setStreet(sellerAddressDTO.getStreet());
+	        }
+	        if (sellerAddressDTO.getOffice() != null) {
+	            UserAddress.setOffice(sellerAddressDTO.getOffice());
+	        }
+	        if (sellerAddressDTO.getPobox() != null) {
+	            UserAddress.setPobox(sellerAddressDTO.getPobox());
+	        }
+	        if (sellerAddressDTO.getPostCode() != null) {
+	            UserAddress.setPostCode(sellerAddressDTO.getPostCode());
+	        }
+	        if (sellerAddressDTO.getPhoneNumber() != null) {
+	            UserAddress.setPhoneNumber(sellerAddressDTO.getPhoneNumber());
+	        }
+	        if (sellerAddressDTO.getSelectedCountry() != null) {
+	            UserAddress.setSelectedCountry(sellerAddressDTO.getSelectedCountry());
+	        }
+	        if (sellerAddressDTO.getAirport() != null) {
+	            UserAddress.setAirport(sellerAddressDTO.getAirport());
+	        }
+	        if (sellerAddressDTO.getSeaport() != null) {
+	            UserAddress.setSeaport(sellerAddressDTO.getSeaport());
+	        }
+
+	        Set<AddressType> addressTypes = getAddressTypes(sellerAddressDTO);
+	        if (addressTypes != null) {
+	            UserAddress.setAddressTypes(addressTypes);
+	        }
+
+	        return UserAddress;
+	    }
+
+	    private UserAddressResponse convertToResponseDTO(UserAddress UserAddress) {
+	    	UserAddressResponse responseDTO = new UserAddressResponse();
+	        responseDTO.setId(UserAddress.getId());
+	        responseDTO.setAddress(UserAddress.getAddress() != null ? UserAddress.getAddress() : "");
+	        responseDTO.setSelectedOrigin(UserAddress.getSelectedOrigin() != null ? UserAddress.getSelectedOrigin() : "");
+	        responseDTO.setCity(UserAddress.getCity() != null ? UserAddress.getCity() : "");
+	        responseDTO.setArea(UserAddress.getArea() != null ? UserAddress.getArea() : "");
+	        responseDTO.setStreet(UserAddress.getStreet() != null ? UserAddress.getStreet() : "");
+	        responseDTO.setOffice(UserAddress.getOffice() != null ? UserAddress.getOffice() : "");
+	        responseDTO.setPobox(UserAddress.getPobox() != null ? UserAddress.getPobox() : "");
+	        responseDTO.setPostCode(UserAddress.getPostCode() != null ? UserAddress.getPostCode() : "");
+	        responseDTO.setPhoneNumber(UserAddress.getPhoneNumber() != null ? UserAddress.getPhoneNumber() : "");
+	        responseDTO.setSelectedCountry(UserAddress.getSelectedCountry() != null ? UserAddress.getSelectedCountry() : "");
+	        responseDTO.setAirport(UserAddress.getAirport() != null ? UserAddress.getAirport() : "");
+	        responseDTO.setSeaport(UserAddress.getSeaport() != null ? UserAddress.getSeaport() : "");
+
+	        responseDTO.setIsLocationChecked(isAddressTypeChecked(UserAddress.getAddressTypes(), AddressType.STOCK));
+	        responseDTO.setIsBillingChecked(isAddressTypeChecked(UserAddress.getAddressTypes(), AddressType.BILLING));
+	        responseDTO.setIsDefaultChecked(isAddressTypeChecked(UserAddress.getAddressTypes(), AddressType.DEFAULT));
+
+	        return responseDTO;
+	    }
+
+	    private boolean isAddressTypeChecked(Set<AddressType> addressTypes, AddressType typeToCheck) {
+	        return addressTypes != null && addressTypes.contains(typeToCheck);
+	    }
+
+	    private Set<AddressType> getAddressTypes(SellerAddressDTO sellerAddressDTO) {
+	        Set<AddressType> addressTypes = new HashSet<>();
+	        if (sellerAddressDTO.getIsLocationChecked()) {
+	            addressTypes.add(AddressType.STOCK);
+	        }
+	        if (sellerAddressDTO.getIsBillingChecked()) {
+	            addressTypes.add(AddressType.BILLING);
+	        }
+	        if (sellerAddressDTO.getIsDefaultChecked()) {
+	            addressTypes.add(AddressType.DEFAULT);
+	        }
+	        return addressTypes;
+	    }
+	    private Set<AddressType> getAddressTypes(UserAddressResponse sellerAddressDTO) {
+	        Set<AddressType> addressTypes = new HashSet<>();
+	        if (sellerAddressDTO.getIsLocationChecked()) {
+	            addressTypes.add(AddressType.STOCK);
+	        }
+	        if (sellerAddressDTO.getIsBillingChecked()) {
+	            addressTypes.add(AddressType.BILLING);
+	        }
+	        if (sellerAddressDTO.getIsDefaultChecked()) {
+	            addressTypes.add(AddressType.DEFAULT);
+	        }
+	        return addressTypes;
+	    }
+
+
+		public Response updateAddress(UserAddressResponse sellerAddressDTO) {
+	        Optional<UserAddress> existingAddressOptional = addressRepo.findById(sellerAddressDTO.getId());
+	    	User seller=getUserDetails();
+	        List<UserAddress> existingAddresses = seller.getAddress();
+
+	       
+	        if (existingAddressOptional.isPresent()) {
+	            UserAddress existingAddress = existingAddressOptional.get();
+	            if (sellerAddressDTO.getAddress() != null) {
+	                existingAddress.setAddress(sellerAddressDTO.getAddress());
+	            }
+	            if (sellerAddressDTO.getSelectedOrigin() != null) {
+	                existingAddress.setSelectedOrigin(sellerAddressDTO.getSelectedOrigin());
+	            }
+	            if (sellerAddressDTO.getCity() != null) {
+	                existingAddress.setCity(sellerAddressDTO.getCity());
+	            }
+	            if (sellerAddressDTO.getArea() != null) {
+	                existingAddress.setArea(sellerAddressDTO.getArea());
+	            }
+	            if (sellerAddressDTO.getStreet() != null) {
+	                existingAddress.setStreet(sellerAddressDTO.getStreet());
+	            }
+	            if (sellerAddressDTO.getOffice() != null) {
+	                existingAddress.setOffice(sellerAddressDTO.getOffice());
+	            }
+	            if (sellerAddressDTO.getPobox() != null) {
+	                existingAddress.setPobox(sellerAddressDTO.getPobox());
+	            }
+	            if (sellerAddressDTO.getPostCode() != null) {
+	                existingAddress.setPostCode(sellerAddressDTO.getPostCode());
+	            }
+	            if (sellerAddressDTO.getPhoneNumber() != null) {
+	                existingAddress.setPhoneNumber(sellerAddressDTO.getPhoneNumber());
+	            }
+	            if (sellerAddressDTO.getSelectedCountry() != null) {
+	                existingAddress.setSelectedCountry(sellerAddressDTO.getSelectedCountry());
+	            }
+	            if (sellerAddressDTO.getAirport() != null) {
+	                existingAddress.setAirport(sellerAddressDTO.getAirport());
+	            }
+	            if (sellerAddressDTO.getSeaport() != null) {
+	                existingAddress.setSeaport(sellerAddressDTO.getSeaport());
+	            }
+
+	            Set<AddressType> addressTypes = getAddressTypes(sellerAddressDTO);
+	            if (addressTypes != null) {
+//	            	addressTypes.add(AddressType.DEFAULT);
+	                existingAddress.setAddressTypes(addressTypes);
+	            }
+	            
+	            if(existingAddresses!=null&&addressTypes.contains(AddressType.DEFAULT)) {
+	                for (UserAddress address : existingAddresses) {
+	                    Set<AddressType> addressType = address.getAddressTypes();
+	                    if (addressTypes != null) {
+	                        addressTypes.remove(AddressType.DEFAULT);
+	                        address.setAddressTypes(addressType);
+	                    }
+	                    addressRepo.save(address);
+	                }}
+
+	            UserAddress updatedAddress = addressRepo.save(existingAddress);
+	            return new Response<>(true,"Address Updated",convertToResponseDTO(updatedAddress));
+	        }
+	        return new Response<>(false,"No address found for this address Id!!");
+	    }
+
+
+		public void deleteAddress(String id) {
+
+	        addressRepo.deleteById(id);
+	    
+			// TODO Auto-generated method stub
+			
+		}
+
+
+		public Response getAllAddresses() {
+	    	User seller=getUserDetails();
+	    	List<UserAddress> UserAddress=seller.getAddress();
+	    	if(UserAddress==null) {
+	    		return new Response<>(false,"No address found!!");
+	    	}
+	        List<UserAddressResponse> addresses=UserAddress.stream()
+	                .map(this::convertToResponseDTO)
+	                .collect(Collectors.toList());
+	        
+	        return new Response<>(true,addresses.size()+" Address found",addresses);
+	    }
+
+
+		public Response markAsDefault(String id) {
+			try {
+				User seller=getUserDetails();
+			    List<UserAddress> existingAddresses = seller.getAddress();
+			    if(existingAddresses!=null&&existingAddresses.size()>0) {
+			    	
+			    	existingAddresses.forEach(address->{
+			    		if(address.getId()==id) {
+			    			address.getAddressTypes().add(AddressType.DEFAULT);
+			    		}else {
+			    			address.getAddressTypes().remove(AddressType.DEFAULT);
+			    		}
+			    	});
+			    	seller.setAddress(existingAddresses);
+			    	SaveUserData(seller);
+			    	return new Response<>(true,"address mask as defalut");
+			    }
+			    return new Response<>(false,"something went wrong while mark as default!!");
+			}catch(Exception e) {
+				return new Response<>(false,"something went worng!!",e.getMessage());
+
+			}
+			
+}
+
 
     //https://herbal-jeevan-9dl6.onrender.com
 }

@@ -46,6 +46,8 @@ import com.ecommerce.HerbalJeevan.DTO.ImageResource;
 import com.ecommerce.HerbalJeevan.DTO.ProductFilterDTO;
 import com.ecommerce.HerbalJeevan.DTO.ProductImageDTO;
 import com.ecommerce.HerbalJeevan.DTO.ProductResponse;
+import com.ecommerce.HerbalJeevan.DTO.Response;
+import com.ecommerce.HerbalJeevan.DTO.SellerDetailsResponse;
 import com.ecommerce.HerbalJeevan.DTO.SingleProductDTO;
 import com.ecommerce.HerbalJeevan.DTO.imageUploadDTO;
 import com.ecommerce.HerbalJeevan.DTO.productdto;
@@ -179,10 +181,19 @@ public class ProductServiceImp implements ProductService {
 
 
 	@Override
-	public void deleteProductWithImagesAndPriceList(Long id) {
-		// TODO Auto-generated method stub
-		
-	}
+	public void deleteProductWithImagesAndPriceList(String id) {
+        Product product = ProductRepo.findByProductId(id).orElse(null);
+        if (product != null) {
+            // Delete associated images
+            List<ProductImage> productImages = product.getImages();
+            for (ProductImage image : productImages) {
+            	imageUploadService.deleteImage(image.getImageUrl());
+            }            
+            ProductRepo.deleteById(product.getId());
+        } else {
+            throw new RuntimeException("Product not found with ID: " + id);
+        }
+    }
 
 	@Override
 	public void deleteProductWithImages(String id) {
@@ -242,9 +253,55 @@ public class ProductServiceImp implements ProductService {
 
 	@Override
 	public Optional<SingleProductDTO> getProductById(String productId) {
-		// TODO Auto-generated method stub
-		return Optional.empty();
-	}
+    	SingleProductDTO response=new SingleProductDTO();
+
+    	try {
+    		
+    		Optional<Product> repoProduct=ProductRepo.findProductByProductId(productId);
+    		
+    		if(repoProduct.isPresent()) {
+
+    			Product product=repoProduct.get();
+	            BeanUtilsBean notNull = new NullAwareBeanUtilsBean();
+        		Admin seller=product.getSeller();
+
+        		product.setSeller(null);
+	            notNull.copyProperties(response, product);
+        		List<ImageDto> img=getImages(product.getImages());
+        		response.setImages(img);
+        		response.setCategoryPath(product.getCategory().getUrlSlug());
+        		response.setCurrencyname("");
+        		response.setSalePrice(product.getSalePrice());
+        		response.setCategoryPath(product.getCategory().getUrlSlug());
+        		response.setOriginalPrice(product.getOriginalPrice());
+        		setCategories(response,product.getCategoryPath());
+        		if(seller!=null) {
+        			SellerDetailsResponse s=new SellerDetailsResponse();
+        			s.setCompanyName("");
+        			s.setCountryOfoperation("India");
+        			s.setIsVerified("VERIFIED");
+        			s.setName(seller.getFirstname()+" "+seller.getLastname());
+        			
+        			response.setSeller(s);
+        		}
+    			
+    			
+    		}
+    		return Optional.of(response);
+    		
+    		
+    		
+    	}catch (IllegalAccessException | InvocationTargetException e) {
+            System.err.println("Error copying properties from Product to ProductDTO: " + e.getMessage());
+            Throwable targetException = ((InvocationTargetException) e).getTargetException();
+            if (targetException != null) {
+                targetException.printStackTrace();
+            } else {
+                e.printStackTrace();
+            }
+    	}
+    	return null;
+    }
 
 	@Override
 	public List<ProductImageDTO> getImageDto(MultipartFile[] file) {
@@ -469,8 +526,37 @@ public class ProductServiceImp implements ProductService {
 
 	@Override
 	public boolean updateProduct(productdto res, List<ProductImageDTO> productImage, Product oldProduct) {
-		// TODO Auto-generated method stub
-		return false;
+		List<String> savedImagesPath=new ArrayList<>();
+    	List<ProductImage> productImages = new ArrayList<>();
+    	Product product=convertToProductEntity(res);
+
+
+		
+		try {
+			getImageList(productImage,oldProduct,savedImagesPath,productImages);
+			product.setId(oldProduct.getId());
+			product.setProductId(oldProduct.getProductId());
+			product.setImages(oldProduct.getImages());
+			oldProduct.getImages().addAll(productImages);
+            BeanUtilsBean notNull = new NullAwareBeanUtilsBean();
+            notNull.copyProperties(oldProduct,product);
+            imgRepo.saveAll(productImages);
+            ProductRepo.save(oldProduct);
+            
+            
+
+			return true;
+			
+		}catch(Exception  e) {
+
+			  for (String imagePath : savedImagesPath) {
+		          deleteImage(imagePath);
+		      }
+		     e.printStackTrace();
+		     return false;
+		   	
+		}
+		
 	}
 
 	@Override
@@ -642,8 +728,8 @@ public class ProductServiceImp implements ProductService {
 
 	@Override
 	public Set<String> searchProducts(String query) {
-		// TODO Auto-generated method stub
-		return null;
+		Set<String> result=ProductRepo.findByNameContaining(query.toLowerCase());
+		return result;
 	}
 
 	@Override
@@ -662,6 +748,81 @@ public class ProductServiceImp implements ProductService {
 	public void updateProductSeller() {
 		// TODO Auto-generated method stub
 		
+	}
+
+
+	public Product findProductById(String productId) {
+		return ProductRepo.findByProductId(productId).orElse(null);	
+	}
+
+
+	public Response<?> deleteProductImage(Long imageId) {
+		Optional<ProductImage> img=imgRepo.findById(imageId);
+		if(img==null||!img.isPresent()||img.get()==null) {
+			return new Response<Object>(false,"image not found!!");
+		}
+
+		try {
+			imageUploadService.deleteImage(img.get().getImageUrl());
+			return new Response<Object>(true,"image deleted");
+			
+
+
+		}catch(Exception e) {
+			return new Response<Object>(false,"Error deleting image from cloud"+" message: "+e.getMessage());
+		}
+		
+		
+	}
+
+
+	public Response<?> uploadProductImage(String productId, MultipartFile file) {
+		int nextPriority=1;
+		try {
+			Product product=ProductRepo.getProductByProductId(productId);
+			if(product==null) {
+				return new Response<Object>(false,"Product not found!!");
+			}
+			
+			imageUploadDTO imageurl=this.getImageUrl(file);
+			if(imageurl==null) {
+				return new Response<Object>(false,"Error while uploading image on aws!!");
+			}
+			
+			int priority = extractPriority(file.getOriginalFilename());
+
+	        
+
+	        ProductImage productImage = new ProductImage();
+	        productImage.setImageUrl(imageurl.getUrl()); 
+	        productImage.setProduct(product); 
+	        productImage.setSku(product.getSku());
+	        productImage.setName(file.getOriginalFilename());
+	        productImage.setSize(file.getSize());
+	        productImage.setDimension(imageurl.getHeight()+" x "+imageurl.getWidth());
+	        productImage.setPriority( priority == 0 ? nextPriority++ : priority);
+	        imgRepo.saveAndFlush(productImage);
+	        ImageDto imge=new ImageDto();
+	        imge.setDimension(productImage.getDimension());
+	        imge.setImageUrl(productImage.getImageUrl());
+	        imge.setImageId(productImage.getId());
+	        imge.setName(productImage.getName());
+	        imge.setPriority(productImage.getPriority());
+	        imge.setSize(this.getImageSize(productImage.getSize()));
+	        return new Response<>(true,"image uploaded",imge);
+			
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return new Response<>(false,e.getMessage());
+		}
+	}
+	
+	public String getImageSize(Long size) {
+		double sizeInKB = size / 1024.0;
+        String formattedSize = String.format("%.1fKB", sizeInKB);
+		return formattedSize;
 	}
 
 }

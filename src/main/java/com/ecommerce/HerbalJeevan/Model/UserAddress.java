@@ -10,13 +10,16 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 import org.hibernate.annotations.GenericGenerator;
 
 import com.ecommerce.HerbalJeevan.Enums.AddressType;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Entity
 public class UserAddress {
@@ -45,8 +48,11 @@ public class UserAddress {
     @Enumerated(EnumType.STRING)
     private Set<AddressType> addressTypes;
     
-    @ManyToOne
-    private UserModel user;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false)
+    @JsonBackReference
+    private UserModel userId;
+
 
     // Getters and Setters
 
@@ -56,13 +62,19 @@ public class UserAddress {
         return id;
     }
 
-    public UserModel getUser() {
-		return user;
+
+
+	public UserModel getUserId() {
+		return userId;
 	}
 
-	public void setUser(UserModel user) {
-		this.user = user;
+
+
+	public void setUserId(UserModel userId) {
+		this.userId = userId;
 	}
+
+
 
 	public void setId(String id) {
         this.id = id;

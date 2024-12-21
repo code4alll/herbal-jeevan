@@ -45,8 +45,12 @@ public class Product implements Serializable{
 	@OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductImage> images;
 	
-	@OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true,fetch=FetchType.LAZY)
 	private List<ProductReview> reviews;
+	
+	@OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true,fetch=FetchType.LAZY)
+	private List<ProductQuestion> questions;
+
 	
 	
 //	@OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)

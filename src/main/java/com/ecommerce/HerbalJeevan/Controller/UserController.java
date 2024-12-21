@@ -4,7 +4,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -15,8 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ecommerce.HerbalJeevan.DTO.LoginDto;
 import com.ecommerce.HerbalJeevan.DTO.LoginResponse;
 import com.ecommerce.HerbalJeevan.DTO.RegisterDto;
-import com.ecommerce.HerbalJeevan.DTO.emailResponseDto;
-import com.ecommerce.HerbalJeevan.Enums.DetailsUpdateType;
+import com.ecommerce.HerbalJeevan.DTO.SellerAddressDTO;
+import com.ecommerce.HerbalJeevan.DTO.UserAddressResponse;
+import com.ecommerce.HerbalJeevan.DTO.emailResponse;
 import com.ecommerce.HerbalJeevan.Enums.OtpVerificationStatus;
 import com.ecommerce.HerbalJeevan.Enums.Roles;
 import com.ecommerce.HerbalJeevan.Service.OTPservices;
@@ -70,7 +73,7 @@ public class UserController {
 	 @PostMapping("/verifyOtp")
 	    private ResponseEntity<?> verifyOTP(@RequestParam("username") String username,@RequestParam("otp") String otp,@RequestParam("role") String role){
 	    	OtpVerificationStatus response=null;
-	    	emailResponseDto res=new emailResponseDto();
+	    	emailResponse res=new emailResponse();
 	    	if(username!=null&&otp!=null&role!=null) {
 	    		
 	    		try {
@@ -161,5 +164,45 @@ public class UserController {
 		 return ResponseEntity.ok(response);
 	 }
 
+	 
+	 
+	 @PostMapping("/user/add-address")
+	    public ResponseEntity<?> AddSellerAddress(@RequestBody SellerAddressDTO seller){
+	    	Response response=userService.saveUserAddress(seller);
+	    			
+	    	return ResponseEntity.ok(response);
+	    }
+	    
+	    @PostMapping("/user/update-address")
+	    public ResponseEntity<?> UpdateSellerAddress(@RequestBody UserAddressResponse seller){
+	    	Response response=userService.updateAddress(seller);
+			
+	    	return ResponseEntity.ok(response);
+	    }
+	    
+	    @DeleteMapping("/user/delete-address/{id}")
+	    public ResponseEntity<?> DeleteAddress(@PathVariable String id){
+	    	try {
+	    		userService.deleteAddress(id);
+	    		return ResponseEntity.ok("Address Deleted!!");
+	    	}catch(Exception e) {
+	    		e.printStackTrace();
+	    		return ResponseEntity.badRequest().body("Error while delete!!"+e.getMessage());
+
+	    	}
+	    }
+	    
+	    @GetMapping("/user/get-address")
+	    public ResponseEntity<?> GetSellerAddress(){
+	    	Response response=userService.getAllAddresses();
+	    	return ResponseEntity.ok(response);
+	    }
+	    
+	    @PostMapping("/user/mark-default-address")
+	    public ResponseEntity<?> MakeAddressDefault(@RequestParam(name="id") String Id){
+	    	Response response=userService.markAsDefault(Id);
+	    	return ResponseEntity.ok(response);
+	    	
+	    }
 }
 	

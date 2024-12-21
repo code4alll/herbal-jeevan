@@ -1,9 +1,13 @@
 package com.ecommerce.HerbalJeevan.Controller;
 
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -18,7 +22,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,17 +37,23 @@ import com.ecommerce.HerbalJeevan.DTO.ImageResource;
 import com.ecommerce.HerbalJeevan.DTO.ProductFilterDTO;
 import com.ecommerce.HerbalJeevan.DTO.ProductImageDTO;
 import com.ecommerce.HerbalJeevan.DTO.ProductResponse;
+import com.ecommerce.HerbalJeevan.DTO.Response;
+import com.ecommerce.HerbalJeevan.DTO.SingleProductDTO;
 import com.ecommerce.HerbalJeevan.DTO.productdto;
 import com.ecommerce.HerbalJeevan.Enums.SortOption;
 import com.ecommerce.HerbalJeevan.Model.Admin;
+import com.ecommerce.HerbalJeevan.Model.Product;
 import com.ecommerce.HerbalJeevan.Service.ProductServiceImp;
 import com.ecommerce.HerbalJeevan.Service.UserService;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import springfox.documentation.annotations.ApiIgnore;
 
 @RestController
 @RequestMapping("/api/product")
+@CrossOrigin(origins = "*")
 public class ProductController {
 	
 	@Autowired
@@ -193,5 +206,115 @@ public class ProductController {
 	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
 	        }
 	}
+	
+	
+	@ApiIgnore
+	@DeleteMapping("/deleteProduct/{id}")
+	public ResponseEntity<?> deleteProduct(@PathVariable String id) {
+		try {
+			productService.deleteProductWithImagesAndPriceList(id);
+			return ResponseEntity.ok().build();
+		} catch (Exception e) {
+			return ResponseEntity.status(500).body("Failed to delete product: " + e.getMessage());
+		}
+	}
+	@ApiIgnore
+	@PatchMapping("/update-product")
+	public ResponseEntity<?> updateProduct(
+			@RequestParam("productData") String productData,
+			@RequestParam(name = "productImage", required = false) MultipartFile[] file,
+			@RequestParam(name = "productId") String productId) {
+		List<ProductImageDTO> productImage = new ArrayList<>();
+		productdto res = new productdto();
+
+		Boolean valid = true;
+		ObjectMapper objectMapper = new ObjectMapper();
+
+		try {
+			if (file != null) {
+				for (int i = 0; i < file.length; i++) {
+					ProductImageDTO image = new ProductImageDTO();
+					image.setImageData(file[i]);
+					productImage.add(image);
+
+				}
+			}
+			res = objectMapper.readValue(productData, productdto.class);
+			Product oldProduct = productService.findProductById(productId);
+
+			if (productImage != null && res != null && oldProduct != null) {
+				Boolean status = productService.updateProduct(res, productImage, oldProduct);
+				if (status) {
+					return ResponseEntity.status(HttpStatus.OK).body("Product updated successfully");
+
+				} else {
+					return ResponseEntity.status(HttpStatus.NOT_FOUND)
+							.body("Something went wrong while updating the product");
+
+				}
+
+			} else {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Product not found");
+
+			}
+
+		} catch (JsonParseException e1) {
+
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body("Failed to add product: " + e1.getMessage());
+
+		} catch (JsonMappingException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body("Failed to add product: " + e1.getMessage());
+
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body("Failed to add product: " + e1.getMessage());
+
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body("Something went wrong while ading  the product" + e.getMessage());
+
+		}
+	}
+	
+	 @DeleteMapping("/product/image/delete-image/{imageId}")
+	 public ResponseEntity<?> DeleteProductImage(@PathVariable Long imageId){
+		 Response<?> response=productService.deleteProductImage(imageId);
+		 
+			return ResponseEntity.ok(response);
+		 
+	 }
+	 
+	 
+	 
+//	 @ApiIgnore
+	 @PostMapping("/product/image/upload-image/{productId}")
+	 public ResponseEntity<?> UploadProductImage(@PathVariable String productId,@RequestParam("file") MultipartFile file){
+		 Response<?> response=productService.uploadProductImage(productId,file);
+		return ResponseEntity.ok(response);
+	 }
+	 
+	 @GetMapping("/product/{productId}")
+	    public ResponseEntity<SingleProductDTO> getProductById(@PathVariable String productId) {
+	        Optional<SingleProductDTO> product = productService.getProductById(productId);
+	        return product.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+	    }
+	 @GetMapping("/autocomplete")
+	    public Response<?> autocomplete(@RequestParam String query) {
+	        Set<String> products = productService.searchProducts(query);
+	        if(products==null||products.isEmpty()) {
+	        	return new Response<>(false,"No product found with this name!!");
+	        }
+	        return new Response<>(true,products.size()+" Product found!!",products);
+	    }
+	 
+	 
 
 }

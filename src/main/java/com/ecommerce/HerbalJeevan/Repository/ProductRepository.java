@@ -1,6 +1,7 @@
 package com.ecommerce.HerbalJeevan.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.data.domain.Page;
@@ -9,10 +10,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.ecommerce.HerbalJeevan.DTO.SingleProductDTO;
 import com.ecommerce.HerbalJeevan.Model.Category;
 import com.ecommerce.HerbalJeevan.Model.Product;
 
-public interface ProductRepository extends JpaRepository<Product,Long> {
+public interface ProductRepository extends JpaRepository<Product,String> {
 
 	Product getProductByProductId(String productId);
 
@@ -156,6 +158,10 @@ public interface ProductRepository extends JpaRepository<Product,Long> {
 	    @Query("select productId from Product")
 		List<String> getAllProductId();
 
+		Optional<Product> findByProductId(String productId);
+
+	    @Query("SELECT p from Product p left join fetch p.seller where p.productId= :productId  ")
+		Optional<Product> findProductByProductId(@Param("productId") String productId);
 
 }
 

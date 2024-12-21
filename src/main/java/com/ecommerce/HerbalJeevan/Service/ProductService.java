@@ -28,7 +28,6 @@ import com.ecommerce.HerbalJeevan.Model.ProductImage;
 
 public interface ProductService {
 	boolean addProduct(productdto productDTO, List<ProductImageDTO> imageDTO, Admin user) throws IOException;
-    void deleteProductWithImagesAndPriceList(Long id);
     void deleteProductWithImages(String id);
     String ImageEncodeDecode(String filename);
     String deleteProduct(Long id);
@@ -64,6 +63,7 @@ public interface ProductService {
 	Set<String> searchCategory(String category, String parentCategory);
 	Set<String> searchCategory(String category);
 	void updateProductSeller();
+	void deleteProductWithImagesAndPriceList(String id);
 
 }
 
