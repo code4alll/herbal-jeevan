@@ -48,6 +48,7 @@ import com.ecommerce.HerbalJeevan.DTO.ProductImageDTO;
 import com.ecommerce.HerbalJeevan.DTO.ProductResponse;
 import com.ecommerce.HerbalJeevan.DTO.Response;
 import com.ecommerce.HerbalJeevan.DTO.SellerDetailsResponse;
+import com.ecommerce.HerbalJeevan.DTO.SingleImageResponse;
 import com.ecommerce.HerbalJeevan.DTO.SingleProductDTO;
 import com.ecommerce.HerbalJeevan.DTO.imageUploadDTO;
 import com.ecommerce.HerbalJeevan.DTO.productdto;
@@ -279,7 +280,7 @@ public class ProductServiceImp implements ProductService {
         			SellerDetailsResponse s=new SellerDetailsResponse();
         			s.setCompanyName("");
         			s.setCountryOfoperation("India");
-        			s.setIsVerified("VERIFIED");
+        			s.setIsVerified(seller.getIsVerified());
         			s.setName(seller.getFirstname()+" "+seller.getLastname());
         			
         			response.setSeller(s);
@@ -824,5 +825,57 @@ public class ProductServiceImp implements ProductService {
         String formattedSize = String.format("%.1fKB", sizeInKB);
 		return formattedSize;
 	}
+
+
+	@Override
+	public SingleImageResponse GetSingleProductImage(List<ProductImage> images) {
+    	SingleImageResponse image=new SingleImageResponse();
+    	images.sort(Comparator.comparingInt(ProductImage::getPriority));
+     images.forEach(e->{
+	   if(e.getPriority()==1) {
+		image.setImageUrl(e.getImageUrl());
+		double sizeInKB = e.getSize() / 1024.0;
+        String formattedSize = String.format("%.1fKB", sizeInKB);
+		image.setImageSize(formattedSize);
+		image.setImageName(e.getName());
+
+	    }else if(e.getPriority()==2) {
+	    	image.setImageUrl(e.getImageUrl());
+			double sizeInKB = e.getSize() / 1024.0;
+	        String formattedSize = String.format("%.1fKB", sizeInKB);
+			image.setImageSize(formattedSize);
+			image.setImageName(e.getName());
+	    }else if(e.getPriority()==3) {
+
+	    	image.setImageUrl(e.getImageUrl());
+			double sizeInKB = e.getSize() / 1024.0;
+	        String formattedSize = String.format("%.1fKB", sizeInKB);
+			image.setImageSize(formattedSize);
+			image.setImageName(e.getName());
+	    
+	    }else if(e.getPriority()==4) {
+
+	    	image.setImageUrl(e.getImageUrl());
+			double sizeInKB = e.getSize() / 1024.0;
+	        String formattedSize = String.format("%.1fKB", sizeInKB);
+			image.setImageSize(formattedSize);
+			image.setImageName(e.getName());
+	    
+	    }else {
+
+
+	    	image.setImageUrl(e.getImageUrl());
+			double sizeInKB = e.getSize() / 1024.0;
+	        String formattedSize = String.format("%.1fKB", sizeInKB);
+			image.setImageSize(formattedSize);
+			image.setImageName(e.getName());
+	    
+	    
+	    }
+    });    	 
+    	
+    	return image;
+    	
+    }
 
 }

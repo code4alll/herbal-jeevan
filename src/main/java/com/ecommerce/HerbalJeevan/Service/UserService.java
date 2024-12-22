@@ -1,5 +1,6 @@
 package com.ecommerce.HerbalJeevan.Service;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -38,6 +39,7 @@ import com.ecommerce.HerbalJeevan.Model.UserAddress;
 import com.ecommerce.HerbalJeevan.Model.UserModel;
 import com.ecommerce.HerbalJeevan.Repository.UserAddressRepository;
 import com.ecommerce.HerbalJeevan.Repository.UserRepo;
+import com.ecommerce.HerbalJeevan.Utility.NullAwareBeanUtilsBean;
 import com.ecommerce.HerbalJeevan.Utility.Response;
 import com.ecommerce.HerbalJeevan.services.email.EmailService;
 
@@ -196,12 +198,12 @@ public class UserService {
 
 	}
 	
-    public Response SendVerificationOtp(String username,String name) {
+    public Response<?> SendVerificationOtp(String username,String name) {
 		String otp=otpService.saveOtpDetails(username);
 		String subject="Herbal Jivan Otp Verification";
 		String text=name+"_"+"Your Verification OTP".toUpperCase()+otp;
 		emailService.sendSimpleMessage(username, subject, text);
-		return new Response(true,"verification mail sent to : "+username);
+		return new Response<>(true,"verification mail sent to : "+username);
 	}
 
 
@@ -309,7 +311,7 @@ public class UserService {
 	 
 		public Response<Object> ForgotPassword(LoginDto updateDetails,Roles role) {
 			if(updateDetails.getUsername()==null||updateDetails.getPassword()==null||role==null) {
-				return new Response(false,"Please fill all the required fields",updateDetails);
+				return new Response<>(false,"Please fill all the required fields",updateDetails);
 			}
 			
 			
@@ -327,7 +329,7 @@ public class UserService {
 				user=getAdminDetails(updateDetails.getUsername());
 			}
 			if(user==null) {
-				return new Response(false,"user not exist for given user name");
+				return new Response<>(false,"user not exist for given user name");
 			}else { 
 				
 			String subject="Herbal Jivan Otp Verification";
@@ -340,7 +342,7 @@ public class UserService {
 				otp = OTPservices.saveOtpDetails(DetailsUpdateType.PASSWORD, user.getUsername(),this.passwordEncoder.encode(updateDetails.getPassword()));
 			
 			 String text=user.getFirstname()+"_"+"Your password update otp".toUpperCase()+otp;
-			 Response emailres=emailService.sendSimpleMessage(to, subject, text);
+			 Response<?> emailres=emailService.sendSimpleMessage(to, subject, text);
 			 
 			 if(emailres.getStatus()) {
 				 return new Response<>(true,"otp verification mail sent to: "+user.getEmail());
@@ -355,11 +357,11 @@ public class UserService {
 		}
 
 
-		public Response VerifyAndUpdatePassword(String otp, String username, Roles role) {
+		public Response<?> VerifyAndUpdatePassword(String otp, String username, Roles role) {
 
 			UserModel user=null;
 			if(otp==null||username==null||role==null) {
-				return new Response(false,"Enter all the required information to verify like username otp role");
+				return new Response<>(false,"Enter all the required information to verify like username otp role");
 			}
 		
 			if(Roles.USER.equals(role)) {
@@ -370,13 +372,13 @@ public class UserService {
 			
 			
 			if(user==null) {
-				return new Response(false,"user not exist");
+				return new Response<>(false,"user not exist");
 			}
 
 			
 			
 			
-			Response response=otpService.verifyVerificationOtp(otp,"PASSWORD",user.getUsername());
+			Response<?> response=otpService.verifyVerificationOtp(otp,"PASSWORD",user.getUsername());
 			if(response.getStatus()&&response.getMessage().equalsIgnoreCase("VERIFIED")) {
 				
 				
@@ -386,7 +388,7 @@ public class UserService {
 				
 				otpService.InvalidateOtp("password",user.getUsername());
 				
-				return new Response(true,"Otp Verified and "+"password".toUpperCase()+" Updated");
+				return new Response<>(true,"Otp Verified and "+"password".toUpperCase()+" Updated");
 
 			}
 			return response;
@@ -415,131 +417,44 @@ public class UserService {
      	}
 
 
-		public Response saveUserAddress(SellerAddressDTO address) {
+		public Response<?> saveUserAddress(SellerAddressDTO address) {
 		       
-	    	User seller=getUserDetails();
-	        List<UserAddress> existingAddresses = seller.getAddress();
-
-	      
-
+	    	User seller=getUserDetails();     
 	        UserAddress newAddress = convertToEntity(address);
 	        newAddress.setUserId(seller);
-
-	        Set<AddressType> newAddressTypes = getAddressTypes(address);
-	        if (newAddressTypes != null) {
-//	            newAddressTypes.add(AddressType.DEFAULT);
-	            newAddress.setAddressTypes(newAddressTypes);
+            Set<AddressType> addressTypes = getAddressTypes(address);
+	        if(addressTypes!=null&&!addressTypes.isEmpty()) {
+	        	newAddress.setAddressTypes(addressTypes);
 	        }
 
 	        addressRepo.save(newAddress);
 	        
-	        return new Response<>(true,"Address Saved",convertToResponseDTO(newAddress));
+	        return new Response<>(true,"Address Saved",UserAddressResponse.convertToResponseDTO(newAddress));
 	    }
 		
 		
-		private UserAddress convertToEntity(SellerAddressDTO sellerAddressDTO) {
+		private UserAddress convertToEntity(SellerAddressDTO dto) {
 	        UserAddress UserAddress = new UserAddress();
-	        if (sellerAddressDTO.getAddress() != null) {
-	            UserAddress.setAddress(sellerAddressDTO.getAddress());
-	        }
-	        if (sellerAddressDTO.getSelectedOrigin() != null) {
-	            UserAddress.setSelectedOrigin(sellerAddressDTO.getSelectedOrigin());
-	        }
-	        if (sellerAddressDTO.getCity() != null) {
-	            UserAddress.setCity(sellerAddressDTO.getCity());
-	        }
-	        if (sellerAddressDTO.getArea() != null) {
-	            UserAddress.setArea(sellerAddressDTO.getArea());
-	        }
-	        if (sellerAddressDTO.getStreet() != null) {
-	            UserAddress.setStreet(sellerAddressDTO.getStreet());
-	        }
-	        if (sellerAddressDTO.getOffice() != null) {
-	            UserAddress.setOffice(sellerAddressDTO.getOffice());
-	        }
-	        if (sellerAddressDTO.getPobox() != null) {
-	            UserAddress.setPobox(sellerAddressDTO.getPobox());
-	        }
-	        if (sellerAddressDTO.getPostCode() != null) {
-	            UserAddress.setPostCode(sellerAddressDTO.getPostCode());
-	        }
-	        if (sellerAddressDTO.getPhoneNumber() != null) {
-	            UserAddress.setPhoneNumber(sellerAddressDTO.getPhoneNumber());
-	        }
-	        if (sellerAddressDTO.getSelectedCountry() != null) {
-	            UserAddress.setSelectedCountry(sellerAddressDTO.getSelectedCountry());
-	        }
-	        if (sellerAddressDTO.getAirport() != null) {
-	            UserAddress.setAirport(sellerAddressDTO.getAirport());
-	        }
-	        if (sellerAddressDTO.getSeaport() != null) {
-	            UserAddress.setSeaport(sellerAddressDTO.getSeaport());
-	        }
-
-	        Set<AddressType> addressTypes = getAddressTypes(sellerAddressDTO);
-	        if (addressTypes != null) {
-	            UserAddress.setAddressTypes(addressTypes);
-	        }
-
+	        NullAwareBeanUtilsBean utils= new NullAwareBeanUtilsBean();
+	        try {
+				utils.copyProperties(UserAddress, dto);
+			} catch (IllegalAccessException | InvocationTargetException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 	        return UserAddress;
 	    }
 
-	    private UserAddressResponse convertToResponseDTO(UserAddress UserAddress) {
-	    	UserAddressResponse responseDTO = new UserAddressResponse();
-	        responseDTO.setId(UserAddress.getId());
-	        responseDTO.setAddress(UserAddress.getAddress() != null ? UserAddress.getAddress() : "");
-	        responseDTO.setSelectedOrigin(UserAddress.getSelectedOrigin() != null ? UserAddress.getSelectedOrigin() : "");
-	        responseDTO.setCity(UserAddress.getCity() != null ? UserAddress.getCity() : "");
-	        responseDTO.setArea(UserAddress.getArea() != null ? UserAddress.getArea() : "");
-	        responseDTO.setStreet(UserAddress.getStreet() != null ? UserAddress.getStreet() : "");
-	        responseDTO.setOffice(UserAddress.getOffice() != null ? UserAddress.getOffice() : "");
-	        responseDTO.setPobox(UserAddress.getPobox() != null ? UserAddress.getPobox() : "");
-	        responseDTO.setPostCode(UserAddress.getPostCode() != null ? UserAddress.getPostCode() : "");
-	        responseDTO.setPhoneNumber(UserAddress.getPhoneNumber() != null ? UserAddress.getPhoneNumber() : "");
-	        responseDTO.setSelectedCountry(UserAddress.getSelectedCountry() != null ? UserAddress.getSelectedCountry() : "");
-	        responseDTO.setAirport(UserAddress.getAirport() != null ? UserAddress.getAirport() : "");
-	        responseDTO.setSeaport(UserAddress.getSeaport() != null ? UserAddress.getSeaport() : "");
-
-	        responseDTO.setIsLocationChecked(isAddressTypeChecked(UserAddress.getAddressTypes(), AddressType.STOCK));
-	        responseDTO.setIsBillingChecked(isAddressTypeChecked(UserAddress.getAddressTypes(), AddressType.BILLING));
-	        responseDTO.setIsDefaultChecked(isAddressTypeChecked(UserAddress.getAddressTypes(), AddressType.DEFAULT));
-
-	        return responseDTO;
-	    }
-
-	    private boolean isAddressTypeChecked(Set<AddressType> addressTypes, AddressType typeToCheck) {
-	        return addressTypes != null && addressTypes.contains(typeToCheck);
-	    }
-
-	    private Set<AddressType> getAddressTypes(SellerAddressDTO sellerAddressDTO) {
-	        Set<AddressType> addressTypes = new HashSet<>();
-	        if (sellerAddressDTO.getIsLocationChecked()) {
-	            addressTypes.add(AddressType.STOCK);
-	        }
-	        if (sellerAddressDTO.getIsBillingChecked()) {
-	            addressTypes.add(AddressType.BILLING);
-	        }
-	        if (sellerAddressDTO.getIsDefaultChecked()) {
-	            addressTypes.add(AddressType.DEFAULT);
-	        }
-	        return addressTypes;
-	    }
-	    private Set<AddressType> getAddressTypes(UserAddressResponse sellerAddressDTO) {
-	        Set<AddressType> addressTypes = new HashSet<>();
-	        if (sellerAddressDTO.getIsLocationChecked()) {
-	            addressTypes.add(AddressType.STOCK);
-	        }
-	        if (sellerAddressDTO.getIsBillingChecked()) {
-	            addressTypes.add(AddressType.BILLING);
-	        }
-	        if (sellerAddressDTO.getIsDefaultChecked()) {
-	            addressTypes.add(AddressType.DEFAULT);
-	        }
-	        return addressTypes;
-	    }
+	   
 
 
-		public Response updateAddress(UserAddressResponse sellerAddressDTO) {
+
+	   
+	 
+
+
+		public Response<?> updateAddress(UserAddressResponse sellerAddressDTO) {
+			try {
 	        Optional<UserAddress> existingAddressOptional = addressRepo.findById(sellerAddressDTO.getId());
 	    	User seller=getUserDetails();
 	        List<UserAddress> existingAddresses = seller.getAddress();
@@ -547,45 +462,15 @@ public class UserService {
 	       
 	        if (existingAddressOptional.isPresent()) {
 	            UserAddress existingAddress = existingAddressOptional.get();
-	            if (sellerAddressDTO.getAddress() != null) {
-	                existingAddress.setAddress(sellerAddressDTO.getAddress());
-	            }
-	            if (sellerAddressDTO.getSelectedOrigin() != null) {
-	                existingAddress.setSelectedOrigin(sellerAddressDTO.getSelectedOrigin());
-	            }
-	            if (sellerAddressDTO.getCity() != null) {
-	                existingAddress.setCity(sellerAddressDTO.getCity());
-	            }
-	            if (sellerAddressDTO.getArea() != null) {
-	                existingAddress.setArea(sellerAddressDTO.getArea());
-	            }
-	            if (sellerAddressDTO.getStreet() != null) {
-	                existingAddress.setStreet(sellerAddressDTO.getStreet());
-	            }
-	            if (sellerAddressDTO.getOffice() != null) {
-	                existingAddress.setOffice(sellerAddressDTO.getOffice());
-	            }
-	            if (sellerAddressDTO.getPobox() != null) {
-	                existingAddress.setPobox(sellerAddressDTO.getPobox());
-	            }
-	            if (sellerAddressDTO.getPostCode() != null) {
-	                existingAddress.setPostCode(sellerAddressDTO.getPostCode());
-	            }
-	            if (sellerAddressDTO.getPhoneNumber() != null) {
-	                existingAddress.setPhoneNumber(sellerAddressDTO.getPhoneNumber());
-	            }
-	            if (sellerAddressDTO.getSelectedCountry() != null) {
-	                existingAddress.setSelectedCountry(sellerAddressDTO.getSelectedCountry());
-	            }
-	            if (sellerAddressDTO.getAirport() != null) {
-	                existingAddress.setAirport(sellerAddressDTO.getAirport());
-	            }
-	            if (sellerAddressDTO.getSeaport() != null) {
-	                existingAddress.setSeaport(sellerAddressDTO.getSeaport());
-	            }
+	           
 
+	            NullAwareBeanUtilsBean util=new NullAwareBeanUtilsBean();
+	            
+	            sellerAddressDTO.setId(existingAddress.getId());
+					util.copyProperties(existingAddresses,sellerAddressDTO);
+				
 	            Set<AddressType> addressTypes = getAddressTypes(sellerAddressDTO);
-	            if (addressTypes != null) {
+	            if (addressTypes!=null&&!addressTypes.isEmpty()) {
 //	            	addressTypes.add(AddressType.DEFAULT);
 	                existingAddress.setAddressTypes(addressTypes);
 	            }
@@ -595,16 +480,49 @@ public class UserService {
 	                    Set<AddressType> addressType = address.getAddressTypes();
 	                    if (addressTypes != null) {
 	                        addressTypes.remove(AddressType.DEFAULT);
+	                        addressTypes.add(AddressType.HOME);
 	                        address.setAddressTypes(addressType);
 	                    }
 	                    addressRepo.save(address);
 	                }}
 
 	            UserAddress updatedAddress = addressRepo.save(existingAddress);
-	            return new Response<>(true,"Address Updated",convertToResponseDTO(updatedAddress));
+	            return new Response<>(true,"Address Updated",UserAddressResponse.convertToResponseDTO(updatedAddress));
 	        }
 	        return new Response<>(false,"No address found for this address Id!!");
+
+			}
+	        catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+		        return new Response<>(false,"Something went wrong while update!!");
+
+				
+			} 
 	    }
+
+
+		private Set<AddressType> getAddressTypes(SellerAddressDTO address) {
+			Set<AddressType> type=new HashSet<>();
+			if(address != null&&address.getIsDefault()) {
+				type.add(AddressType.DEFAULT);
+			}else {
+				type.add(AddressType.HOME);
+				type.add(AddressType.BILLING);
+			}
+			return type;
+		}
+		
+		private Set<AddressType> getAddressTypes(UserAddressResponse sellerAddressDTO) {
+			Set<AddressType> type=new HashSet<>();
+			if(sellerAddressDTO != null&&sellerAddressDTO.getIsDefault()) {
+				type.add(AddressType.DEFAULT);
+			}else {
+				type.add(AddressType.HOME);
+				type.add(AddressType.BILLING);
+			}
+			return type;
+		}
 
 
 		public void deleteAddress(String id) {
@@ -616,21 +534,21 @@ public class UserService {
 		}
 
 
-		public Response getAllAddresses() {
+		public Response<?> getAllAddresses() {
 	    	User seller=getUserDetails();
 	    	List<UserAddress> UserAddress=seller.getAddress();
 	    	if(UserAddress==null) {
 	    		return new Response<>(false,"No address found!!");
 	    	}
 	        List<UserAddressResponse> addresses=UserAddress.stream()
-	                .map(this::convertToResponseDTO)
+	                .map(e->UserAddressResponse.convertToResponseDTO(e))
 	                .collect(Collectors.toList());
 	        
 	        return new Response<>(true,addresses.size()+" Address found",addresses);
 	    }
 
 
-		public Response markAsDefault(String id) {
+		public Response<?> markAsDefault(String id) {
 			try {
 				User seller=getUserDetails();
 			    List<UserAddress> existingAddresses = seller.getAddress();
@@ -653,7 +571,25 @@ public class UserService {
 
 			}
 			
+			
+			
 }
+		
+		public static ClaimedToken getAppUser() {
+			
+			Authentication authentication=SecurityContextHolder.getContext().getAuthentication();
+			
+			 if (authentication != null && authentication.getPrincipal()!=null && authentication.getPrincipal() instanceof com.ecommerce.HerbalJeevan.Config.SecurityConfig.ClaimedToken) {
+		        	return   (ClaimedToken) authentication.getPrincipal();
+		        }
+			
+			return null;
+			
+		}
+		
+		public static String getCurrentUserId() {
+			return getAppUser()!=null?getAppUser().getUserId():null;
+		}
 
 
     //https://herbal-jeevan-9dl6.onrender.com

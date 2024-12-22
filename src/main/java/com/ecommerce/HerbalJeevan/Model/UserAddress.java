@@ -30,18 +30,13 @@ public class UserAddress {
     @Column(name = "id", updatable = false, nullable = false)
     private String id;
 
-    private String address;
-    private String selectedOrigin;
+	private String address;
     private String city;
-    private String area;
-    private String street;
-    private String office;
-    private String pobox;
-    private String postCode;
+    private String pincode;
     private String phoneNumber;
-    private String selectedCountry;
-    private String airport;
-    private String seaport;
+    private Boolean isDefault;
+    private String name;
+    private String landmark;
 
     @ElementCollection(targetClass = AddressType.class)
     @CollectionTable(name = "address_type")
@@ -53,128 +48,69 @@ public class UserAddress {
     @JsonBackReference
     private UserModel userId;
 
-
-    // Getters and Setters
-
-   
-
 	public String getId() {
-        return id;
-    }
-
-
-
-	public UserModel getUserId() {
-		return userId;
+		return id;
 	}
-
-
-
-	public void setUserId(UserModel userId) {
-		this.userId = userId;
-	}
-
-
 
 	public void setId(String id) {
-        this.id = id;
-    }
+		this.id = id;
+	}
 
-    public String getAddress() {
-        return address;
-    }
+	public String getAddress() {
+		return address;
+	}
 
-    public void setAddress(String address) {
-        this.address = address;
-    }
+	public void setAddress(String address) {
+		this.address = address;
+	}
 
-    public String getSelectedOrigin() {
-        return selectedOrigin;
-    }
+	public String getCity() {
+		return city;
+	}
 
-    public void setSelectedOrigin(String selectedOrigin) {
-        this.selectedOrigin = selectedOrigin;
-    }
+	public void setCity(String city) {
+		this.city = city;
+	}
 
-    public String getCity() {
-        return city;
-    }
+	public String getPincode() {
+		return pincode;
+	}
 
-    public void setCity(String city) {
-        this.city = city;
-    }
+	public void setPincode(String pincode) {
+		this.pincode = pincode;
+	}
 
-    public String getArea() {
-        return area;
-    }
+	public String getPhoneNumber() {
+		return phoneNumber;
+	}
 
-    public void setArea(String area) {
-        this.area = area;
-    }
+	public void setPhoneNumber(String phoneNumber) {
+		this.phoneNumber = phoneNumber;
+	}
 
-    public String getStreet() {
-        return street;
-    }
+	public Boolean getIsDefault() {
+		return isDefault;
+	}
 
-    public void setStreet(String street) {
-        this.street = street;
-    }
+	public void setIsDefault(Boolean isDefault) {
+		this.isDefault = isDefault;
+	}
 
-    public String getOffice() {
-        return office;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setOffice(String office) {
-        this.office = office;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public String getPobox() {
-        return pobox;
-    }
+	public String getLandmark() {
+		return landmark;
+	}
 
-    public void setPobox(String pobox) {
-        this.pobox = pobox;
-    }
-
-    public String getPostCode() {
-        return postCode;
-    }
-
-    public void setPostCode(String postCode) {
-        this.postCode = postCode;
-    }
-
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
-
-    public String getSelectedCountry() {
-        return selectedCountry;
-    }
-
-    public void setSelectedCountry(String selectedCountry) {
-        this.selectedCountry = selectedCountry;
-    }
-
-    public String getAirport() {
-        return airport;
-    }
-
-    public void setAirport(String airport) {
-        this.airport = airport;
-    }
-
-    public String getSeaport() {
-        return seaport;
-    }
-
-    public void setSeaport(String seaport) {
-        this.seaport = seaport;
-    }
+	public void setLandmark(String landmark) {
+		this.landmark = landmark;
+	}
 
 	public Set<AddressType> getAddressTypes() {
 		return addressTypes;
@@ -183,6 +119,15 @@ public class UserAddress {
 	public void setAddressTypes(Set<AddressType> addressTypes) {
 		this.addressTypes = addressTypes;
 	}
+
+	public UserModel getUserId() {
+		return userId;
+	}
+
+	public void setUserId(UserModel userId) {
+		this.userId = userId;
+	}
+
 
    
 }

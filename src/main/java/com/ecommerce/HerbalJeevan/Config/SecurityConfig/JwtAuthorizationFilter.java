@@ -70,6 +70,8 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
                 String user=(String)tokenClaims.get("username");
                 String role=(String)tokenClaims.get("Role");
                 String country=(String) tokenClaims.get("country");
+                String userId=(String) tokenClaims.get("userId");
+
                 
                 ClaimedToken claimed=new ClaimedToken();
                 
@@ -77,6 +79,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
                 claimed.setCountry(country);
                 claimed.setName(name);
                 claimed.setUsername(user);
+                claimed.setUserId(userId);
                 
                 
 

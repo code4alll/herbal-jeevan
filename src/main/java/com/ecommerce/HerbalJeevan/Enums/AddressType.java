@@ -4,6 +4,8 @@ package com.ecommerce.HerbalJeevan.Enums;
 public enum AddressType {
 	    DEFAULT,
 	    BILLING,
+	    HOME,
+	    WORK,	    
 	    STOCK;
 	
 	 public static AddressType fromString(String value) {

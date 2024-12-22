@@ -21,6 +21,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import com.ecommerce.HerbalJeevan.Validation.ProductValidValues;
+import com.nimbusds.oauth2.sdk.util.StringUtils;
 
 
 @Entity
@@ -82,6 +83,7 @@ public class Product implements Serializable{
 	
     private String sku;
     private String availability;
+   @Column(name="quantity",columnDefinition = "100")
     private String quantity;
 
 	
@@ -225,7 +227,9 @@ public class Product implements Serializable{
 	public void setQuantity(String quantity) {
 		this.quantity = quantity;
 	}
-	
+	public Boolean isAvailable() {
+		return StringUtils.isNotBlank(this.quantity)&&Integer.valueOf(this.quantity)>0;
+	}
 	
     
         

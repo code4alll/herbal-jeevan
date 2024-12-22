@@ -1,5 +1,7 @@
 package com.ecommerce.HerbalJeevan.DTO;
 
+import com.ecommerce.HerbalJeevan.Enums.Status;
+
 public class SellerDetailsResponse {
 	private String name;
 	private String countryOfoperation;
@@ -26,8 +28,11 @@ public class SellerDetailsResponse {
 	public String getIsVerified() {
 		return isVerified;
 	}
-	public void setIsVerified(String isVerified) {
-		this.isVerified = isVerified;
+	public void setIsVerified(Status status) {
+		if(status.equals(Status.ACTIVE)) {
+			this.isVerified="VERIFIED";
+		}
+		this.isVerified = "UNVERIFIED";
 	}
 	
 }

@@ -37,6 +37,7 @@ public class JwtTokenUtil {
 	        String email = userDetails.getEmail();
 	        String userName=userDetails.getUsername();
 	        String country=userDetails.getCountry();
+	        String userId=userDetails.getUserId();
 	       
 ;	        
 	                
@@ -51,10 +52,10 @@ public class JwtTokenUtil {
 	                .claim("name", name)
 	                .claim("username",userName)
 	                .claim("country",country)
+	                .claim("userId", userId)
 	                .compact();
 	        
 	        // Log the generated token
-	    String str=token;
 	        
 	        return token;
 	    }

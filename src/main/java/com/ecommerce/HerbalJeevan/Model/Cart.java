@@ -31,7 +31,7 @@ public class Cart {
     private String id;
 
     @OneToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false)
     private User user;
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -54,29 +54,29 @@ public class Cart {
     
     
     
-//      public void updateTotal() {
-//        double newTotal = 0.0;
-//        double newUnitTotal=0.0;
-//         double UnitGstPrice=0.0;
-//         double SellGstPrice=0.0;
-//        
-//        
-//        for (CartItem item : cartItems) {
-//        	UnitGstPrice+=GetGstPrice(item.getUnitPrice(),item.getGst(),item.getQuantity());
-//        	newUnitTotal += (item.getQuantity() * item.getUnitPrice());
-//
-//        }
-//        for (CartItem item : cartItems) {
-//        	SellGstPrice+=+GetGstPrice(item.getSellPrice(),item.getGst(),item.getQuantity());
-//            newTotal += (item.getQuantity() * item.getSellPrice());
-//
-//        }
-//
-//        this.totalSellPrice = newTotal;
-//        this.totalUnitPrice=newUnitTotal;
-//        this.totalSellGstPrice=SellGstPrice;
-//        this.totalUnitGstPrice=UnitGstPrice;
-//    }
+      public void updateTotal() {
+        double newTotal = 0.0;
+        double newUnitTotal=0.0;
+         double UnitGstPrice=0.0;
+         double SellGstPrice=0.0;
+        
+        
+        for (CartItem item : cartItems) {
+        	UnitGstPrice+=GetGstPrice(item.getUnitPrice(),item.getGst(),item.getQuantity());
+        	newUnitTotal += (item.getQuantity() * item.getUnitPrice());
+
+        }
+        for (CartItem item : cartItems) {
+        	SellGstPrice+=+GetGstPrice(item.getSellPrice(),item.getGst(),item.getQuantity());
+            newTotal += (item.getQuantity() * item.getSellPrice());
+
+        }
+
+        this.totalSellPrice = newTotal;
+        this.totalUnitPrice=newUnitTotal;
+        this.totalSellGstPrice=SellGstPrice;
+        this.totalUnitGstPrice=UnitGstPrice;
+    }
     
     public Double GetGstPrice(Double price,Double gst,Integer qty) {
 

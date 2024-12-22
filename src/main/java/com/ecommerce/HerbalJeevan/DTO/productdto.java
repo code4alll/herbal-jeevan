@@ -15,6 +15,7 @@ public class productdto {
 	private String fiveStar;
 	private String name;
 	private String info;
+	private String quantity;
 	
 	
 	public String getCategoryPath() {
@@ -82,6 +83,12 @@ public class productdto {
 	}
 	public void setInfo(String info) {
 		this.info = info;
+	}
+	public String getQuantity() {
+		return quantity;
+	}
+	public void setQuantity(String quantity) {
+		this.quantity = quantity;
 	}
 	
 	

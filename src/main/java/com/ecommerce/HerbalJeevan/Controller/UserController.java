@@ -149,7 +149,7 @@ public class UserController {
 		private ResponseEntity<?> UpdatePassword(@RequestBody LoginDto updateDetails){
 			Response<Object> res=new Response<>();
 			if(updateDetails==null) {
-				ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(false,"please enter required information"));
+				ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response<>(false,"please enter required information"));
 			}
 			
 			res=userService.ForgotPassword(updateDetails,Roles.USER);
@@ -159,7 +159,7 @@ public class UserController {
 	 @PostMapping("/forgot-password/verify")
 	 private ResponseEntity<?> VerifyOtpForPassword(@RequestParam(name="otp",required=true) String otp,@RequestParam(name="username",required=true)String username,@RequestParam(name="role") Roles role){
 			 
-		 Response response=userService.VerifyAndUpdatePassword(otp,username,role);
+		 Response<?> response=userService.VerifyAndUpdatePassword(otp,username,role);
 		 
 		 return ResponseEntity.ok(response);
 	 }
@@ -168,14 +168,14 @@ public class UserController {
 	 
 	 @PostMapping("/user/add-address")
 	    public ResponseEntity<?> AddSellerAddress(@RequestBody SellerAddressDTO seller){
-	    	Response response=userService.saveUserAddress(seller);
+	    	Response<?> response=userService.saveUserAddress(seller);
 	    			
 	    	return ResponseEntity.ok(response);
 	    }
 	    
 	    @PostMapping("/user/update-address")
 	    public ResponseEntity<?> UpdateSellerAddress(@RequestBody UserAddressResponse seller){
-	    	Response response=userService.updateAddress(seller);
+	    	Response<?> response=userService.updateAddress(seller);
 			
 	    	return ResponseEntity.ok(response);
 	    }
@@ -194,13 +194,13 @@ public class UserController {
 	    
 	    @GetMapping("/user/get-address")
 	    public ResponseEntity<?> GetSellerAddress(){
-	    	Response response=userService.getAllAddresses();
+	    	Response<?> response=userService.getAllAddresses();
 	    	return ResponseEntity.ok(response);
 	    }
 	    
 	    @PostMapping("/user/mark-default-address")
 	    public ResponseEntity<?> MakeAddressDefault(@RequestParam(name="id") String Id){
-	    	Response response=userService.markAsDefault(Id);
+	    	Response<?> response=userService.markAsDefault(Id);
 	    	return ResponseEntity.ok(response);
 	    	
 	    }

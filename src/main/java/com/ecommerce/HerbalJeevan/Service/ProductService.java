@@ -16,6 +16,7 @@ import com.ecommerce.HerbalJeevan.DTO.ImageDto;
 import com.ecommerce.HerbalJeevan.DTO.ProductFilterDTO;
 import com.ecommerce.HerbalJeevan.DTO.ProductImageDTO;
 import com.ecommerce.HerbalJeevan.DTO.ProductResponse;
+import com.ecommerce.HerbalJeevan.DTO.SingleImageResponse;
 import com.ecommerce.HerbalJeevan.DTO.SingleProductDTO;
 import com.ecommerce.HerbalJeevan.DTO.imageUploadDTO;
 import com.ecommerce.HerbalJeevan.DTO.productdto;
@@ -64,6 +65,7 @@ public interface ProductService {
 	Set<String> searchCategory(String category);
 	void updateProductSeller();
 	void deleteProductWithImagesAndPriceList(String id);
+	SingleImageResponse GetSingleProductImage(List<ProductImage> images);
 
 }
 

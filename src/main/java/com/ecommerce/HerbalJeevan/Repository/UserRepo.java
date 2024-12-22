@@ -8,13 +8,16 @@ import org.springframework.data.repository.query.Param;
 
 import com.ecommerce.HerbalJeevan.Enums.Roles;
 import com.ecommerce.HerbalJeevan.Enums.Status;
+import com.ecommerce.HerbalJeevan.Model.User;
 import com.ecommerce.HerbalJeevan.Model.UserModel;
 
-public interface UserRepo extends JpaRepository<UserModel,Long> {
+public interface UserRepo extends JpaRepository<UserModel,String> {
 
 	Optional<UserModel> findByusername(String username);
 
 	Optional<UserModel> findByUsernameAndRoleAndIsVerified(String userName, Roles role,Status isVerified);
+	User findByUserIdAndRoleAndIsVerified(String userId, Roles role,Status isVerified);
+
 
 	@Query("SELECT COUNT(u) > 0 FROM UserModel u WHERE u.email = :email AND u.role = :role AND u.isVerified = :isVerified")
 	boolean existsByEmailRoleAndIsVerified(@Param("email") String email, @Param("role") Roles role, @Param("isVerified") Status isVerified);
