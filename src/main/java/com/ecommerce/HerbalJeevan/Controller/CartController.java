@@ -15,9 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ecommerce.HerbalJeevan.Config.SecurityConfig.JwtTokenUtil;
 import com.ecommerce.HerbalJeevan.DTO.CartResponseDto;
-import com.ecommerce.HerbalJeevan.DTO.Response;
 import com.ecommerce.HerbalJeevan.Service.CartService;
 import com.ecommerce.HerbalJeevan.Service.UserService;
+import com.ecommerce.HerbalJeevan.Utility.Response;
 
 @CrossOrigin(origins = "*")
 @RestController

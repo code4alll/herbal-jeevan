@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.ecommerce.HerbalJeevan.DTO.CartItemsDto;
 import com.ecommerce.HerbalJeevan.DTO.CartResponseDto;
-import com.ecommerce.HerbalJeevan.DTO.Response;
 import com.ecommerce.HerbalJeevan.DTO.SingleImageResponse;
 import com.ecommerce.HerbalJeevan.Enums.Roles;
 import com.ecommerce.HerbalJeevan.Enums.Status;
@@ -25,6 +24,7 @@ import com.ecommerce.HerbalJeevan.Repository.CartItemsRepository;
 import com.ecommerce.HerbalJeevan.Repository.CartRepository;
 import com.ecommerce.HerbalJeevan.Repository.ProductRepository;
 import com.ecommerce.HerbalJeevan.Repository.UserRepo;
+import com.ecommerce.HerbalJeevan.Utility.Response;
 
 
 

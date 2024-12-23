@@ -67,6 +67,13 @@ public class TotalOrderResponse {
 		this.noOfOrders+=1;
 		return this;
 	}
+	public TotalOrderResponse(String id, String username,String name, Long noOfOrders) {
+		super();
+		this.id = id;
+		this.name = name;
+		this.username = username;
+		this.noOfOrders = noOfOrders;
+	}
 	
 	
 

@@ -15,6 +15,8 @@ import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,14 +26,19 @@ import org.springframework.stereotype.Service;
 import com.ecommerce.HerbalJeevan.Config.SecurityConfig.ClaimedToken;
 import com.ecommerce.HerbalJeevan.Config.SecurityConfig.JwtBlacklistService;
 import com.ecommerce.HerbalJeevan.Config.SecurityConfig.JwtTokenUtil;
+import com.ecommerce.HerbalJeevan.DTO.AdminFilters;
 import com.ecommerce.HerbalJeevan.DTO.LoginDto;
 import com.ecommerce.HerbalJeevan.DTO.LoginResponse;
+import com.ecommerce.HerbalJeevan.DTO.PageResponse;
 import com.ecommerce.HerbalJeevan.DTO.RegisterDto;
 import com.ecommerce.HerbalJeevan.DTO.SellerAddressDTO;
 import com.ecommerce.HerbalJeevan.DTO.UserAddressResponse;
+import com.ecommerce.HerbalJeevan.DTO.UserDetailResponse;
+import com.ecommerce.HerbalJeevan.DTO.UserResponse;
 import com.ecommerce.HerbalJeevan.Enums.AddressType;
 import com.ecommerce.HerbalJeevan.Enums.DetailsUpdateType;
 import com.ecommerce.HerbalJeevan.Enums.Roles;
+import com.ecommerce.HerbalJeevan.Enums.SortOption;
 import com.ecommerce.HerbalJeevan.Enums.Status;
 import com.ecommerce.HerbalJeevan.Model.Admin;
 import com.ecommerce.HerbalJeevan.Model.User;
@@ -231,6 +238,21 @@ public class UserService {
 		// TODO Auto-generated method stub
 		return (User)userRepo.findByUsernameAndRoleAndIsVerified(username, Roles.USER, Status.ACTIVE).orElse(null);
 	}
+	
+	public Response<?> getUserById(String id) {
+		try {
+	        User user=(User)userRepo.findById(id).orElse(null);
+	        
+	        UserDetailResponse res=new UserDetailResponse(user);
+
+	       
+	        
+			return new Response<>(true,"user found!!",res);
+		}catch(Exception e) {
+			e.printStackTrace();
+			return new Response<>(false,"Error While fetching user details!!");		}
+	}
+
 	
 	 public  String GetUserEmail() {
 	    	Authentication authentication=SecurityContextHolder.getContext().getAuthentication();
@@ -590,6 +612,41 @@ public class UserService {
 		public static String getCurrentUserId() {
 			return getAppUser()!=null?getAppUser().getUserId():null;
 		}
+
+
+		public Response<?> getAllUsers(Pageable page, AdminFilters filter, SortOption sort, Roles userType) {
+	        // Retrieve all users
+			
+			try {
+				
+				
+				Page<UserDetailResponse> users = getAllUsers(filter.getCountry(),filter.getId(),filter.getName(),page,userType);
+		        
+		        // Create a map to hold roles and corresponding users
+		        Map<Roles, List<UserResponse>> roleToUsersMap = new HashMap<>();
+		        
+		        if (users == null || users.getContent()==null||users.getContent().isEmpty()) {
+		            return new Response<Map<Roles, List<UserResponse>>>(false,"No users found", roleToUsersMap);
+		        }
+		        
+
+		        
+		        PageResponse<UserDetailResponse> response=new PageResponse<UserDetailResponse>(users);
+//		        response.setData(userList);
+
+		        // Return the response with the populated map
+		        return new Response<>(true,"Users categorized by roles", response);
+
+			}
+			catch(Exception e) {
+				e.printStackTrace();
+				return new Response<>(false,"Error While fetching users!!");
+			}
+	            }
+		
+		public Page<UserDetailResponse> getAllUsers(Set<String> country, Set<Long> id, Set<String> name, Pageable page, Roles userType){
+     		return userRepo.findallUsers(country,id,name,page,userType);
+     	}
 
 
     //https://herbal-jeevan-9dl6.onrender.com

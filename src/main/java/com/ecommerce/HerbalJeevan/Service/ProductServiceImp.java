@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
@@ -46,7 +45,6 @@ import com.ecommerce.HerbalJeevan.DTO.ImageResource;
 import com.ecommerce.HerbalJeevan.DTO.ProductFilterDTO;
 import com.ecommerce.HerbalJeevan.DTO.ProductImageDTO;
 import com.ecommerce.HerbalJeevan.DTO.ProductResponse;
-import com.ecommerce.HerbalJeevan.DTO.Response;
 import com.ecommerce.HerbalJeevan.DTO.SellerDetailsResponse;
 import com.ecommerce.HerbalJeevan.DTO.SingleImageResponse;
 import com.ecommerce.HerbalJeevan.DTO.SingleProductDTO;
@@ -62,6 +60,7 @@ import com.ecommerce.HerbalJeevan.Repository.ImageRepository;
 import com.ecommerce.HerbalJeevan.Repository.ProductRepository;
 import com.ecommerce.HerbalJeevan.Utility.IdGeneratorUtils;
 import com.ecommerce.HerbalJeevan.Utility.NullAwareBeanUtilsBean;
+import com.ecommerce.HerbalJeevan.Utility.Response;
 
 
 @Service

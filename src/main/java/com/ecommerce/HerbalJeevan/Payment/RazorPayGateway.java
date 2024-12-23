@@ -5,10 +5,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.ecommerce.HerbalJeevan.DTO.Response;
 import com.ecommerce.HerbalJeevan.Enums.PaymentGatewayType;
 import com.ecommerce.HerbalJeevan.Enums.PaymentStatus;
 import com.ecommerce.HerbalJeevan.Service.OrderService;
+import com.ecommerce.HerbalJeevan.Utility.Response;
 import com.razorpay.Order;
 import com.razorpay.Payment;
 import com.razorpay.RazorpayClient;
@@ -31,6 +31,13 @@ public class RazorPayGateway implements PaymentGateway {
 		String orderId=order.get("id");
 		String currency=order.get("currency");
 		Integer amount=order.get("amount");
+		TransactionDetails trans=new TransactionDetails(orderId,currency,amount);
+		return trans;
+	}
+	public TransactionDetails prepareTransaction(PaymentRequest pay) {
+		String orderId=null;
+		String currency=pay.getCurrency();
+		Integer amount=(int) pay.getAmount();
 		TransactionDetails trans=new TransactionDetails(orderId,currency,amount);
 		return trans;
 	}
@@ -80,10 +87,12 @@ public class RazorPayGateway implements PaymentGateway {
 			int amountInPaise = (int) Math.round(paymentRequest.getAmount() * 100);
 			jsonObj.put("amount",amountInPaise);
 			jsonObj.put("currency", paymentRequest.getCurrency());
-			RazorpayClient razorpayClient= new RazorpayClient(keys,keySecret);
-			Order order=razorpayClient.orders.create(jsonObj);
-			return prepareTransaction(order);
-		} catch (RazorpayException e) {
+//			RazorpayClient razorpayClient= new RazorpayClient(keys,keySecret);
+//			Order order=razorpayClient.orders.create(jsonObj);
+//			return prepareTransaction(order);
+
+			return prepareTransaction(paymentRequest);
+		} catch (Exception e) {
 			
 			e.printStackTrace();
             throw new PaymentException("Failed to create transaction with Razorpay: "+e.getMessage(), e);

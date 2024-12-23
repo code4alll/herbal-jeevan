@@ -31,8 +31,8 @@ public class SellerDetailsResponse {
 	public void setIsVerified(Status status) {
 		if(status.equals(Status.ACTIVE)) {
 			this.isVerified="VERIFIED";
-		}
-		this.isVerified = "UNVERIFIED";
+		}else {
+		this.isVerified = "UNVERIFIED";}
 	}
 	
 }

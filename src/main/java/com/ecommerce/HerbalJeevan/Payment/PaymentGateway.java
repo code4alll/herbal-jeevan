@@ -1,6 +1,6 @@
 package com.ecommerce.HerbalJeevan.Payment;
 
-import com.ecommerce.HerbalJeevan.DTO.Response;
+import com.ecommerce.HerbalJeevan.Utility.Response;
 import com.ecommerce.HerbalJeevan.Enums.PaymentGatewayType;
 
 public interface PaymentGateway {

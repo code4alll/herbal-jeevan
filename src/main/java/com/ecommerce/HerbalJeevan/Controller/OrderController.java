@@ -15,10 +15,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecommerce.HerbalJeevan.Config.SecurityConfig.JwtTokenUtil;
-import com.ecommerce.HerbalJeevan.DTO.Response;
 import com.ecommerce.HerbalJeevan.Enums.PaymentGatewayType;
 import com.ecommerce.HerbalJeevan.Service.OrderService;
 import com.ecommerce.HerbalJeevan.Service.UserService;
+import com.ecommerce.HerbalJeevan.Utility.Response;
 
 @CrossOrigin(origins = "*")
 @RestController

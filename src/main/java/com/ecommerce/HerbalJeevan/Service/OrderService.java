@@ -18,11 +18,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ecommerce.HerbalJeevan.DTO.AdminOrderResponse;
+import com.ecommerce.HerbalJeevan.DTO.AdminOrders;
 import com.ecommerce.HerbalJeevan.DTO.Invoice;
 import com.ecommerce.HerbalJeevan.DTO.OrderItemDto;
 import com.ecommerce.HerbalJeevan.DTO.OrderResponseDTO;
 import com.ecommerce.HerbalJeevan.DTO.PageResponse;
-import com.ecommerce.HerbalJeevan.DTO.Response;
 import com.ecommerce.HerbalJeevan.DTO.SellerDetailsResponse;
 import com.ecommerce.HerbalJeevan.DTO.TotalOrderResponse;
 import com.ecommerce.HerbalJeevan.DTO.UserAddressResponse;
@@ -31,6 +32,7 @@ import com.ecommerce.HerbalJeevan.Enums.OrderStatus;
 import com.ecommerce.HerbalJeevan.Enums.PaymentGatewayType;
 import com.ecommerce.HerbalJeevan.Enums.PaymentStatus;
 import com.ecommerce.HerbalJeevan.Enums.Roles;
+import com.ecommerce.HerbalJeevan.Enums.SortOption;
 import com.ecommerce.HerbalJeevan.Model.Admin;
 import com.ecommerce.HerbalJeevan.Model.Cart;
 import com.ecommerce.HerbalJeevan.Model.CartItem;
@@ -41,6 +43,7 @@ import com.ecommerce.HerbalJeevan.Model.User;
 import com.ecommerce.HerbalJeevan.Model.UserAddress;
 import com.ecommerce.HerbalJeevan.Model.UserModel;
 import com.ecommerce.HerbalJeevan.Payment.PaymentCallback;
+import com.ecommerce.HerbalJeevan.Payment.PaymentException;
 import com.ecommerce.HerbalJeevan.Payment.PaymentService;
 import com.ecommerce.HerbalJeevan.Payment.TransactionDetails;
 import com.ecommerce.HerbalJeevan.Repository.OrderItemRepository;
@@ -49,6 +52,7 @@ import com.ecommerce.HerbalJeevan.Repository.TransactionDetailRepository;
 import com.ecommerce.HerbalJeevan.Repository.UserAddressRepository;
 import com.ecommerce.HerbalJeevan.Repository.UserRepo;
 import com.ecommerce.HerbalJeevan.Utility.IdGeneratorUtils;
+import com.ecommerce.HerbalJeevan.Utility.Response;
 
 
 
@@ -86,7 +90,7 @@ public class OrderService {
 	 @Autowired 
 	OrderItemRepository orderItemsRepository;
 	 
-    private final List<PaymentStatus> status = Arrays.asList(PaymentStatus.PENDING, PaymentStatus.UNDEFINED,PaymentStatus.CANCELLED);
+    private final List<PaymentStatus> status = Arrays.asList( PaymentStatus.UNDEFINED,PaymentStatus.CANCELLED);
 
    
 
@@ -124,14 +128,21 @@ public class OrderService {
         historyService.saveOrderHistory(order, description, user.getUsername());
         
         TransactionDetails transaction=paymentService.createTransaction(gateway, order.getOrderId());
-//        if(gateway.equals(PaymentGatewayType.PAYPAL)) {
-//        	transaction.setAmount((int) order.getTotalAmount());
-//        	transaction.setCurrency(order.getCurrency());
-//        }
+        if(gateway.equals(PaymentGatewayType.PAYPAL)) {
+        	transaction.setAmount((int) order.getTotalAmount());
+        	transaction.setCurrency(order.getCurrency());
+        }
         
-        
+        //it is enable while we not get razorpay
+        transaction.setOrderId(order.getOrderId());
+        return new Response<>(true,"ord	er created",transaction);
+
        
-        return new Response<>(true,"order created","Order Id: "+order.getOrderid());
+//        return new Response<>(true,"order created","Order Id: "+order.getOrderid());
+
+    	}
+    	catch(PaymentException e) {
+    		return new Response<>(false,"order creation failled error in creating payment!!",e.getMessage()+" "+e.getCause());
 
     	}
     	catch(Exception e) {
@@ -365,6 +376,49 @@ public class OrderService {
 	
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public Response<?> getUserAdminOrders(Pageable page) {
+		try {
+			
+			List<PaymentStatus> status=new ArrayList<>();
+//			status.add(PaymentStatus.PENDING);
+//			status.add(PaymentStatus.CREATED);
+			status.add(PaymentStatus.UNDEFINED);
+//			User user=userService.getUserDetails();
+			Page<Order> orders=orderRepository.findAll(status,page);
+			
+			if(orders==null||orders.isEmpty()) {
+				return new Response<>(false,"No order found!!");
+
+			}
+			
+			List<AdminOrders> response=new ArrayList<>();
+			List<Order> or=orders.getContent();
+			or.forEach(order->{
+				if(order.getTransactionDetail().getPaymentStatus()!=null&&!(order.getTransactionDetail().getPaymentStatus().equals(PaymentStatus.UNDEFINED)||order.getTransactionDetail().getPaymentStatus().equals(PaymentStatus.UNDEFINED)||order.getTransactionDetail().getPaymentStatus().equals(PaymentStatus.UNDEFINED))){
+					AdminOrders ord=getAdminOrder(order,null);
+					response.add(ord);
+				}
+
+			});
+			
+
+
+			PageResponse respons=new PageResponse<>(orders,"orderDto");
+			respons.setData(response);
+			
+			return new Response<>(true,response.size()+" orders found!!",respons);
+			
+		}catch(Exception e) {
+			e.printStackTrace();
+			return new Response<>(false,"something went wrong while fetching order");
+		}
+		
+		
+		
+	}
+	
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public Response<?> getUserOrders(Pageable page,User user) {
 		try {
 			
@@ -380,7 +434,7 @@ public class OrderService {
 			List<OrderResponseDTO> response=new ArrayList<>();
 			List<Order> or=orders.getContent();
 			or.forEach(order->{
-				if(order.getTransactionDetail().getPaymentStatus()!=null&&!(order.getTransactionDetail().getPaymentStatus().equals(PaymentStatus.PENDING)||order.getTransactionDetail().getPaymentStatus().equals(PaymentStatus.CREATED)||order.getTransactionDetail().getPaymentStatus().equals(PaymentStatus.UNDEFINED))){
+				if(order.getTransactionDetail().getPaymentStatus()!=null&&!(order.getTransactionDetail().getPaymentStatus().equals(PaymentStatus.UNDEFINED)||order.getTransactionDetail().getPaymentStatus().equals(PaymentStatus.UNDEFINED)||order.getTransactionDetail().getPaymentStatus().equals(PaymentStatus.UNDEFINED))){
 					OrderResponseDTO ord=getOrderResponse(order,null);
 					response.add(ord);
 				}
@@ -524,17 +578,17 @@ public class OrderService {
 	}
 
 	
-	public Map<Roles, Map<String, TotalOrderResponse>> overAllOrders() {
-	    Map<Roles, Map<String, TotalOrderResponse>> res = new HashMap<>();
+	public Response<?> overAllOrders(Pageable page) {
+//	    Map<Roles, Map<String, TotalOrderResponse>> res = new HashMap<>();
 //	    Map<String, TotalOrderResponse> sellerMap = new HashMap<>();
-	    Map<String, TotalOrderResponse> buyerMap = new HashMap<>();
+//	    Map<String, TotalOrderResponse> buyerMap = new HashMap<>();
 
 	    // Get all orders
-	    List<Order> orders = orderRepository.findAllOrders(status);
+	    Page<TotalOrderResponse> orders = orderRepository.findAllOrdersUser(status,page);
 	    
 	    // Return empty result if there are no orders
 	    if (orders == null || orders.isEmpty()) {
-	        return res;
+	        return new Response<>(false,"no order found!!");
 	    }
 
 	    // Filter out valid orders based on payment status
@@ -548,12 +602,12 @@ public class OrderService {
 //	        .collect(Collectors.toList());
 
 	    // Process buyer orders
-	    orders.forEach(order -> {
-	        String buyerUsername = order.getUser().getUsername();
-	        TotalOrderResponse buyerResponse = buyerMap.getOrDefault(buyerUsername, new TotalOrderResponse(order.getUser()));
-	        buyerResponse.increateNoOfOrder(); // Increment order count for the buyer
-	        buyerMap.put(buyerUsername, buyerResponse); // Put updated response back into the map
-	    });
+//	    orders.forEach(order -> {
+//	        String buyerUsername = order.getUser().getUsername();
+//	        TotalOrderResponse buyerResponse = buyerMap.getOrDefault(buyerUsername, new TotalOrderResponse(order.getUser()));
+//	        buyerResponse.increateNoOfOrder(); // Increment order count for the buyer
+//	        buyerMap.put(buyerUsername, buyerResponse); // Put updated response back into the map
+//	    });
 
 //	    // Process seller orders
 //	    validOrders.forEach(order -> {
@@ -566,10 +620,10 @@ public class OrderService {
 //	    });
 
 	    // Store results in the final response map
-	    res.put(Roles.USER, buyerMap);
+//	    res.put(Roles.USER, buyerMap);
 //	    res.put(Roles.SELLER, sellerMap);
 
-	    return res;
+	    return new Response<>(true,"order found!!",orders);
 	}
 
     
@@ -608,6 +662,66 @@ public class OrderService {
 		
 		
 	}
+	
+	public AdminOrders getAdminOrder(Order order,Admin seller) {
+		AdminOrders response=new AdminOrders();
+		if(order==null) {
+			return response;
+		}
+		List<AdminOrderResponse> orderitems=new ArrayList<>();
+		
+		if(order.getOrderItems()!=null) {
+			
+			order.getOrderItems().forEach(item->{
+					AdminOrderResponse items=getOrderItemsDtoForAdmin(item);
+					if(items!=null&&items.getQuantity()!=0) {
+						response.increaseQuantity(items.getQuantity());
+					}
+					orderitems.add(items);
+
+				
+			});
+		}
+		
+		response.setOrderId(order.getOrderId());
+		response.setCurrency(order.getCurrency());
+		response.setCurrencySymbol(order.getCurrencySymbol());
+		response.setOrderItems(orderitems);
+		response.setTotalPrice(String.valueOf(order.getTotalAmount()));
+		response.setStage(order.getStage());
+		response.setStatus(order.getStatus());
+		response.setTotalSellPrice(order.getTotalSellPrice());
+		response.setTotalUnitPrice(order.getTotalUnitPrice());
+		response.setOrderDate(order.getOrderDate());
+		response.setBuyer(getBuyerDetail(order.getUser()));
+		response.setAddress(UserAddressResponse.convertToResponseDTO(order.getDeliveryAddress()));
+		return response;
+		
+		
+		
+	}
+	
+	public Map<String,Object> getBuyerDetail(User buyer){
+		Map<String,Object> buyerDetail=new HashMap<>();
+        if(buyer==null) {
+			return new HashMap<>();
+		  }
+		
+		try {
+			buyerDetail.put("name", buyer.getFirstname()+" "+buyer.getLastname());
+			buyerDetail.put("number", buyer.getMobile());
+			buyerDetail.put("email", buyer.getEmail());
+			buyerDetail.put("userId", buyer.getUserId());
+		
+		
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+		return buyerDetail;
+	}
+	
+	
+	
 	
 	public OrderItemDto getOrderItemsDto(OrderItem item) {
 	  OrderItemDto response=new OrderItemDto();
@@ -648,6 +762,36 @@ public class OrderService {
 		
 		
 	}
+	
+	public AdminOrderResponse getOrderItemsDtoForAdmin(OrderItem item) {
+		AdminOrderResponse response=new AdminOrderResponse();
+			if(item==null) {
+				return response;
+			}
+			response.setItemId(item.getId());
+			response.setItemName(item.getItemName());
+			response.setItemPrice(item.getSellPrice()+item.GetGstPrice(item.getSellPrice(), item.getGst(), 1));
+			response.setQuantity(item.getQuantity());
+			response.setProductId(item.getProductId());
+			response.setSellPrice(item.getSellPrice());
+			response.setImageUrl(item.getImageUrl());
+			response.setSize(item.getSize());
+			response.setGst(item.getGst()+"%");
+			response.setName(item.getName());
+			response.setCurrency(item.getCurrency());
+			response.setCurrencySymbol(item.getCurrencySymbol());
+			response.setTotalTax(item.GetGstPrice(item.getSellPrice(), item.getGst(), item.getQuantity()));
+			response.setTotalAmount(item.getTotalAmount());
+			
+			
+			
+			
+			
+			
+			return response;
+			
+			
+		}
 	
 	@SuppressWarnings("static-access")
 	public Response<?> getOrderInvoice(String orderId){
@@ -749,6 +893,23 @@ public class OrderService {
 		Pageable pageable = PageRequest.of(0, 20);
 		Response<?> response=this.getUserOrders(pageable);
 		return new Response<>(true,"Order Cancelled sucessfully",response.getData());
+	}
+
+
+	public Response<?> getOrderDetails(String orderId) {
+		Response<?> res=getOrderInvoice(orderId);
+		if(res.getStatus())
+		res.setMessage("Order fetched for orderId: "+orderId);
+		return res;
+	}
+
+
+	public Response<?> getAllUserOrder(Pageable pageable, String search, SortOption sort, String userId) {
+		User user=(User) userRepo.findById(userId).orElse(null);
+		if(user==null) {
+			return new Response<>(false,"User not found for userId: "+userId);
+		}
+		return getUserOrders(pageable, user);
 	}
 
     

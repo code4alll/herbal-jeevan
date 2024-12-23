@@ -9,10 +9,7 @@ public class OrderItemDto {
     private String gst;
     private Long itemId;
     private String productId;
-    
-    
     private double sellPrice;
-    
     private Double totalAmount;
     
     private Double totalTax;

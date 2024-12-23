@@ -7,7 +7,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.ecommerce.HerbalJeevan.DTO.Response;
+import com.ecommerce.HerbalJeevan.Utility.Response;
 import com.ecommerce.HerbalJeevan.Enums.PaymentGatewayType;
 import com.ecommerce.HerbalJeevan.Enums.PaymentStatus;
 import com.ecommerce.HerbalJeevan.Model.Order;
