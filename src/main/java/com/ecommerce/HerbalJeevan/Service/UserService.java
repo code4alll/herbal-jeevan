@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.transaction.Transactional;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
@@ -44,6 +45,7 @@ import com.ecommerce.HerbalJeevan.Model.Admin;
 import com.ecommerce.HerbalJeevan.Model.User;
 import com.ecommerce.HerbalJeevan.Model.UserAddress;
 import com.ecommerce.HerbalJeevan.Model.UserModel;
+import com.ecommerce.HerbalJeevan.Repository.OrderRepository;
 import com.ecommerce.HerbalJeevan.Repository.UserAddressRepository;
 import com.ecommerce.HerbalJeevan.Repository.UserRepo;
 import com.ecommerce.HerbalJeevan.Utility.NullAwareBeanUtilsBean;
@@ -75,6 +77,8 @@ public class UserService {
 	    
 	    @Autowired
 	    private UserAddressRepository addressRepo;
+	    @Autowired
+	    private OrderRepository orderRepo;
 	    
 
 	public Response<?> registerUser(RegisterDto user, Roles role) {
@@ -647,6 +651,36 @@ public class UserService {
 		public Page<UserDetailResponse> getAllUsers(Set<String> country, Set<Long> id, Set<String> name, Pageable page, Roles userType){
      		return userRepo.findallUsers(country,id,name,page,userType);
      	}
+
+		@Transactional
+		public Response<?> deleteUser(String userId) {
+			try {
+				UserModel user=userRepo.findById(userId).orElse(null);
+				if(user!=null&&user.getRole().equals(Roles.USER)) {
+					User buyer=(User) user;
+					if(buyer.getOrders()!=null&&!buyer.getOrders().isEmpty()&&buyer.getAddress()!=null&&!buyer.getAddress().isEmpty()) {
+						buyer.getAddress().forEach(e->{
+							orderRepo.deleteBydeliveryAddress(e);
+
+						});
+						}
+					userRepo.delete(buyer);
+				}else if(user!=null&&user.getRole().equals(Roles.ADMIN)) {
+					Admin seller=(Admin) user;
+					userRepo.delete(seller);}
+				else {
+					return new Response<>(false,"you don't have permission to delete this user!!");
+				}
+				return new Response<>(true,"user Deleted sucessfully!!");
+			}catch(Exception e) {
+				e.printStackTrace();
+				return new Response<>(false,"error while deleting user!!",e.getMessage()+e.getCause());
+			}
+
+		}
+			
+		
+		
 
 
     //https://herbal-jeevan-9dl6.onrender.com

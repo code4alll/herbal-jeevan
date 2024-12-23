@@ -8,7 +8,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -69,7 +71,7 @@ public class AdminController {
 		private ResponseEntity<?> UpdatePassword(@RequestBody LoginDto updateDetails){
 			Response<Object> res=new Response<>();
 			if(updateDetails==null) {
-				ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(false,"please enter required information"));
+				ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response<>(false,"please enter required information"));
 			}
 			
 			res=userService.ForgotPassword(updateDetails,Roles.ADMIN);
@@ -85,7 +87,8 @@ public class AdminController {
 	            @RequestParam(defaultValue = "NEWEST") SortOption sort,
 	            @RequestParam(required=false) Set<Long> id,
 	            @RequestParam(required=false) Set<String> country,
-	            @RequestParam(required=false) Set<String> name
+	            @RequestParam(required=false) Set<String> name,
+	            @RequestParam(required=true) Roles userType
 
 	            
 	            
@@ -95,7 +98,7 @@ public class AdminController {
 	        filter.setCountry(country);
 	        filter.setId(id);
 	        filter.setName(name);
-			Response<?> res=userService.getAllUsers(pageable,filter,sort,Roles.USER);
+			Response<?> res=userService.getAllUsers(pageable,filter,sort,userType);
 			if(res==null||!res.getStatus()) {
 				return ResponseEntity.badRequest().body(res);
 			}
@@ -157,6 +160,13 @@ public class AdminController {
 				return ResponseEntity.ok(res);
 			}
 			return ResponseEntity.badRequest().body(res);
+		}
+	 
+	 @DeleteMapping("/delete-user/{userId}")
+		public ResponseEntity<?> deleteUser(@PathVariable String userId ){
+			Response<?> res=userService.deleteUser(userId);
+			return ResponseEntity.ok(res);
+			
 		}
 		
 	

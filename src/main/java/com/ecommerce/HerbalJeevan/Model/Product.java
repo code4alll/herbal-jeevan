@@ -230,6 +230,12 @@ public class Product implements Serializable{
 	public Boolean isAvailable() {
 		return StringUtils.isNotBlank(this.quantity)&&Integer.valueOf(this.quantity)>0;
 	}
+	public List<ProductQuestion> getQuestions() {
+		return questions;
+	}
+	public void setQuestions(List<ProductQuestion> questions) {
+		this.questions = questions;
+	}
 	
     
         

@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,6 +38,7 @@ import com.ecommerce.HerbalJeevan.DTO.ImageResource;
 import com.ecommerce.HerbalJeevan.DTO.ProductFilterDTO;
 import com.ecommerce.HerbalJeevan.DTO.ProductImageDTO;
 import com.ecommerce.HerbalJeevan.DTO.ProductResponse;
+import com.ecommerce.HerbalJeevan.DTO.ReviewDto;
 import com.ecommerce.HerbalJeevan.DTO.SingleProductDTO;
 import com.ecommerce.HerbalJeevan.DTO.productdto;
 import com.ecommerce.HerbalJeevan.Enums.SortOption;
@@ -81,13 +83,13 @@ public class ProductController {
 	        
 	        // Handle invalid product data or unauthorized user
 	        if (res == null || !userService.hasSellerAuthority(authentication)) {
-	            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not authorized");
+	            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new Response<>(false,"You are not authorized","You are not authorized"));
 	        }
 
 	        // Process product image
 	        List<ProductImageDTO> productImage = productService.getImageDto(file);
 	        if (productImage == null || StringUtils.isBlank(res.getCategoryPath())) {
-	            return ResponseEntity.status(HttpStatus.CONFLICT).body("Please add category path");
+	            return ResponseEntity.status(HttpStatus.CONFLICT).body(new Response<>(false,"Please add category path","Please add category path"));
 	        }
 
 	        // Add product
@@ -95,15 +97,15 @@ public class ProductController {
 	        boolean status = productService.addProduct(res, productImage, user);
 
 	        if (status) {
-	            return ResponseEntity.status(HttpStatus.OK).body("Product added successfully");
+	            return ResponseEntity.status(HttpStatus.OK).body(new Response<>(true,"Product added successfully","Product added successfully"));
 	        } else {
 	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-	                    .body("Something went wrong while adding the product");
+	                    .body(new Response<>(false,"something went wrong while adding product","Something went wrong while adding the product: "));
 	        }
 	    } catch (Exception e) {
 	        logger.error("Error while adding product", e); // Log the full error
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-	                .body("Something went wrong while adding the product: " + e.getMessage());
+	                .body(new Response<>(false,"something went wrong while adding product","Something went wrong while adding the product: " + e.getMessage()));
 	    }
 	}
 
@@ -208,7 +210,6 @@ public class ProductController {
 	}
 	
 	
-	@ApiIgnore
 	@DeleteMapping("/deleteProduct/{id}")
 	public ResponseEntity<?> deleteProduct(@PathVariable String id) {
 		try {
@@ -218,7 +219,6 @@ public class ProductController {
 			return ResponseEntity.status(500).body("Failed to delete product: " + e.getMessage());
 		}
 	}
-	@ApiIgnore
 	@PatchMapping("/update-product")
 	public ResponseEntity<?> updateProduct(
 			@RequestParam("productData") String productData,
@@ -315,6 +315,30 @@ public class ProductController {
 	        return new Response<>(true,products.size()+" Product found!!",products);
 	    }
 	 
-	 
+	   @PostMapping("/add-review")
+	    public ResponseEntity<?> addReview(@RequestBody ReviewDto req ) {
+		 
+		Response<?> res= productService.addReview(req);
+		if(res.getStatus()) {
+			return ResponseEntity.ok().body(res);
+		}
+		return ResponseEntity.badRequest().body(res);		 
+	 }
+	   
+	   @PostMapping("/add-question")
+	    public ResponseEntity<?> askQuestions(@RequestParam(required=true) String productId,@RequestParam(required=true) String question ) {
+		 
+		Response<?> res= productService.askQuestion(productId,question);
+		if(res.getStatus()) {
+			return ResponseEntity.ok().body(res);
+		}
+		return ResponseEntity.badRequest().body(res);		 
+	 }
+	   
+	   
+	   
+	   
+
+
 
 }

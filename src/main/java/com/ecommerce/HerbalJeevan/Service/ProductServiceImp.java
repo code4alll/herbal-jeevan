@@ -45,6 +45,7 @@ import com.ecommerce.HerbalJeevan.DTO.ImageResource;
 import com.ecommerce.HerbalJeevan.DTO.ProductFilterDTO;
 import com.ecommerce.HerbalJeevan.DTO.ProductImageDTO;
 import com.ecommerce.HerbalJeevan.DTO.ProductResponse;
+import com.ecommerce.HerbalJeevan.DTO.ReviewDto;
 import com.ecommerce.HerbalJeevan.DTO.SellerDetailsResponse;
 import com.ecommerce.HerbalJeevan.DTO.SingleImageResponse;
 import com.ecommerce.HerbalJeevan.DTO.SingleProductDTO;
@@ -55,6 +56,9 @@ import com.ecommerce.HerbalJeevan.Model.Admin;
 import com.ecommerce.HerbalJeevan.Model.Category;
 import com.ecommerce.HerbalJeevan.Model.Product;
 import com.ecommerce.HerbalJeevan.Model.ProductImage;
+import com.ecommerce.HerbalJeevan.Model.ProductQuestion;
+import com.ecommerce.HerbalJeevan.Model.ProductReview;
+import com.ecommerce.HerbalJeevan.Model.User;
 import com.ecommerce.HerbalJeevan.Repository.CategoryRepository;
 import com.ecommerce.HerbalJeevan.Repository.ImageRepository;
 import com.ecommerce.HerbalJeevan.Repository.ProductRepository;
@@ -149,7 +153,12 @@ public class ProductServiceImp implements ProductService {
 		getImageList(imageDTOs,product,savedImagePaths,productImages);
 	    product.setImages(productImages);
 	    product.setProductId(IdGenerator.generateProductId(product.getName(), product.getCategory().getName()));
-	    
+	    if(product.getQuantity()==null) {
+	    	product.setQuantity("100");
+	    }
+	    if(product.getStock()==null) {
+	    	product.setStock("100");
+	    }
 	    
 		violations = validator.validate(product);
 		if(violations.isEmpty()) {
@@ -876,5 +885,87 @@ public class ProductServiceImp implements ProductService {
     	return image;
     	
     }
+
+
+	public Response<?> addReview(ReviewDto req) {
+		if(req==null||req.getProductId()==null||req.getComment()==null) {
+			return new Response<>(false,"Please fill all the required data!!","Please fill all the required data!!");
+		}
+		try {
+			Product product=ProductRepo.findByProductId(req.getProductId()).orElse(null);
+			User user=userService.getUserDetails();
+			if(product==null) {
+				return new Response<>(false,"Product not found!!","Product not found!!");
+			}
+			ProductReview review=new ProductReview();
+			review.setAnonymous(false);
+			review.setApproved(false);
+			review.setRating(req.getRating());
+			review.setDescription(req.getComment());
+			review.setReviewerName(user.getFirstname()+" "+user.getLastname());
+			review.setUser(user);
+			review.setProduct(product);
+			product.getReviews().add(review);
+			if(req.getRating()==1) {
+				product.setOneStar(getIncreasedRating(product.getOneStar()));
+			}
+			else if(req.getRating()==2) {
+				product.setTwoStar(getIncreasedRating(product.getTwoStar()));
+			}else if(req.getRating()==3) {
+				product.setThreeStar(getIncreasedRating(product.getThreeStar()));
+
+			}else if(req.getRating()==4) {
+				product.setFourStar(getIncreasedRating(product.getFourStar()));
+
+			}else if(req.getRating()==5) {
+				product.setFiveStar(getIncreasedRating(product.getFiveStar()));
+
+			}
+			ProductRepo.save(product);
+			return new Response<>(true,"Review submitted sucessfully!!","Review submitted");
+			
+		}catch(Exception e) {
+			e.printStackTrace();
+			return new Response<>(false,"Error while saving review","Error while saving "+e.getCause()+" "+e.getMessage());
+
+		}
+	}
+	
+		private String getIncreasedRating(String old) {
+			if(old==null) {
+				return "1";
+			}else {
+				Integer newval=Integer.valueOf(old)+1;
+				return newval.toString();
+			}
+		}
+
+
+		public Response<?> askQuestion(String productId, String question) {
+			
+			if(productId==null||question==null) {
+			return new Response<>(false,"Please fill all the required data!!","Please fill all the required data!!");
+		}
+		try {
+			Product product=ProductRepo.findByProductId(productId).orElse(null);
+			User user=userService.getUserDetails();
+			if(product==null) {
+				return new Response<>(false,"Product not found!!","Product not found!!");
+			}
+			ProductQuestion review=new ProductQuestion();
+			review.setQuestion(question);
+			review.setProduct(product);
+			review.setUser(user);
+			product.getQuestions().add(review);
+			ProductRepo.save(product);
+			return new Response<>(true,"Question submitted sucessfully!!","Question submitted");
+			
+		}catch(Exception e) {
+			e.printStackTrace();
+			return new Response<>(false,"Error while saving review","Error while saving "+e.getCause()+" "+e.getMessage());
+
+		}
+	}
+	
 
 }
