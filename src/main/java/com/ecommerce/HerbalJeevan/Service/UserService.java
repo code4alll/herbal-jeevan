@@ -537,7 +537,7 @@ public class UserService {
 				type.add(AddressType.DEFAULT);
 			}else {
 				type.add(AddressType.HOME);
-				type.add(AddressType.BILLING);
+//				type.add(AddressType.BILLING);
 			}
 			return type;
 		}

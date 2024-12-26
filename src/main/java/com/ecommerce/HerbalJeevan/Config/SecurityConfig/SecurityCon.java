@@ -49,7 +49,7 @@ public class SecurityCon extends WebSecurityConfigurerAdapter {
             .authorizeRequests()
                 .antMatchers("/api/Login").permitAll()
                 .antMatchers("/api/admin/**").permitAll()
-                .antMatchers("/api/product/AddProduct","/api/product/deleteProduct/**","/api/product/update-product/**").hasRole("ADMIN")
+                .antMatchers("/api/product/AddProduct","/api/product/deleteProduct/**","/api/product/update-product/**","/api/order/update-order-status/**").hasRole("ADMIN")
                 .antMatchers("/api/cart").hasRole("USER")
                 .antMatchers("/api/product/getproducts**","/api/product/product/**","/api/product/autocomplete/**").permitAll()
                 .antMatchers("/api/register","/api/user/**","/api/autocomplete","/api/category/autocomplete","/api/category/getproducts","/api/login/google","/api/login/google/callback/**","/api/paypal/**","/api/payment/**","/api/get-currency-rates","/api/sitemap.xml","/api/assign-notification/**","/api/forgot-password/verify").permitAll()

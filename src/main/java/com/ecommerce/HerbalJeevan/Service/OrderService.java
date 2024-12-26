@@ -233,6 +233,28 @@ public class OrderService {
         }
     }
 
+    public Response<?> updateOrderStatus(String orderId,OrderStatus status) {
+    	try {
+    	Order order=orderRepository.findByOrderId(orderId);
+    	if(order==null) {
+    		return new Response<>(false,"Order not found for orderId: "+orderId);
+    	}
+    	if(order!=null) {
+    		order.getOrderItems().forEach(e->e.setStatus(status));
+    	}
+    	order.setStatus(status);
+    	order.setStage(status.getAllowedStages().get(0));
+    	if(status.equals(OrderStatus.DELIVERED)) {
+    	order.getTransactionDetail().setPaymentStatus(PaymentStatus.SUCCESS);}
+    	orderRepository.saveAndFlush(order);
+    	return new Response<>(true,"Order Status updated Sucessfully!!","Order Status updated Sucessfully!!");
+    	}catch(Exception e) {
+    		e.printStackTrace();
+    		return new Response<>(false,"Error while updating status",e.getCause()+" "+e.getMessage());
+    	}
+    	
+    	
+    }
 
 	public void updateOrderStatus(PaymentCallback callback, PaymentStatus paymentStatus, String transactionId) {
 		TransactionDetailModel transactionDetail=transactionRepo.findBypaymentId(callback.getOrderId());

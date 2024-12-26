@@ -32,7 +32,7 @@ public interface UserRepo extends JpaRepository<UserModel,String> {
 	@Query("SELECT new com.ecommerce.HerbalJeevan.DTO.UserDetailResponse(u.id, u.firstname, u.lastname,u.email) " +
 		       "FROM UserModel u " +
 		       "WHERE u.isVerified = 'ACTIVE' " +
-		       "AND (u.role != 'ADMIN') AND (u.role=:userType) " +
+		       "AND (u.role=:userType) " +
 		       "AND (:id IS NULL OR u.id IN :id) " +
 		       "AND (:country IS NULL OR (u.country) IN (:country)) " +
 		       "AND (:name IS NULL OR (u.firstname) IN (:name) OR (u.lastname) IN (:name))")

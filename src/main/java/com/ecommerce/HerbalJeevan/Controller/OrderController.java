@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecommerce.HerbalJeevan.Config.SecurityConfig.JwtTokenUtil;
+import com.ecommerce.HerbalJeevan.Enums.OrderStatus;
 import com.ecommerce.HerbalJeevan.Enums.PaymentGatewayType;
 import com.ecommerce.HerbalJeevan.Service.OrderService;
 import com.ecommerce.HerbalJeevan.Service.UserService;
@@ -104,6 +106,28 @@ public class OrderController {
 		return ResponseEntity.ok(response);
 		
 	}
+	
+	@PatchMapping("/update-order-status/{orderId}")
+	public ResponseEntity<Response<?>> updateOrderStatus(@PathVariable String orderId,@RequestParam(required=true)String status){
+		if(orderId==null) {
+			return ResponseEntity.badRequest().body(new Response<>(false,"orderId is null!!"));
+		}
+		if(status==null) {
+			return ResponseEntity.badRequest().body(new Response<>(false,"Enter valid order status","valid status are: "+OrderStatus.getValidStatus()));
+		}
+		OrderStatus stat=OrderStatus.fromString(status);
+		if(stat==null) {
+			return ResponseEntity.badRequest().body(new Response<>(false,"Enter valid order status","valid status are: "+OrderStatus.getValidStatus()));
+
+		}
+		Response<?> response=orderService.updateOrderStatus(orderId,stat);
+		if(!response.getStatus()) {
+			return ResponseEntity.badRequest().body(response);
+		}
+		return ResponseEntity.ok(response);
+		
+	}
+	
 
 	
 	
