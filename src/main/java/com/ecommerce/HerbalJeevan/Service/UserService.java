@@ -445,7 +445,10 @@ public class UserService {
 
 		public Response<?> saveUserAddress(SellerAddressDTO address) {
 		       
-	    	User seller=getUserDetails();     
+	    	User seller=getUserDetails();  
+	    	if(seller==null) {
+	    		return new Response<>(false,"User not Authenticated!!");
+	    	}
 	        UserAddress newAddress = convertToEntity(address);
 	        newAddress.setUserId(seller);
             Set<AddressType> addressTypes = getAddressTypes(address);
