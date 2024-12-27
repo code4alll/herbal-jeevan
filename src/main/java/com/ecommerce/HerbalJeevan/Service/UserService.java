@@ -461,8 +461,23 @@ public class UserService {
 	        if(addressTypes!=null&&!addressTypes.isEmpty()) {
 	        	newAddress.setAddressTypes(addressTypes);
 	        }
+	        List<UserAddress> existingAddresses=seller.getAddress();
+	        
+	        if(existingAddresses!=null&&addressTypes.contains(AddressType.DEFAULT)) {
+                for (UserAddress addres : existingAddresses) {
+                    Set<AddressType> addressType = addres.getAddressTypes();
+                    if (addressType != null) {
+                    	addressType.remove(AddressType.DEFAULT);
+                    	addressType.add(AddressType.HOME);
+                        addres.setAddressTypes(addressType);
+	                    addres.setIsDefault(false);
+                    }
+//                    addressRepo.save(address);
+                }}
+	        existingAddresses.add(newAddress);
+            addressRepo.saveAll(existingAddresses);
 
-	        addressRepo.save(newAddress);
+//	        addressRepo.save(newAddress);
 	        
 	        return new Response<>(true,"Address Saved",UserAddressResponse.convertToResponseDTO(newAddress));
 	    }
@@ -514,12 +529,13 @@ public class UserService {
 	            if(existingAddresses!=null&&addressTypes.contains(AddressType.DEFAULT)) {
 	                for (UserAddress address : existingAddresses) {
 	                    Set<AddressType> addressType = address.getAddressTypes();
-	                    if (addressTypes != null) {
-	                        addressTypes.remove(AddressType.DEFAULT);
-	                        addressTypes.add(AddressType.HOME);
+	                    if (addressType != null&&address.getId()!=updatedAddress.getId()) {
+	                    	addressType.remove(AddressType.DEFAULT);
+	                    	addressType.add(AddressType.HOME);
 	                        address.setAddressTypes(addressType);
+		                    address.setIsDefault(false);
 	                    }
-	                    addressRepo.save(address);
+//	                    addressRepo.save(address);
 	                }}
 
 	            addressRepo.saveAll(existingAddresses);
