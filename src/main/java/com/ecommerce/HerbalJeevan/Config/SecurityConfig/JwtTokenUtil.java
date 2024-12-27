@@ -99,7 +99,7 @@ public class JwtTokenUtil {
 		UserModel user=new UserModel();
 		if(userName!=null) {
 			try {
-				 user=userRepo.findByUsernameAndRoleAndIsVerified(userName, role,Status.ACTIVE).orElse(null);
+				 user=userRepo.findByUsernameAndRoleAndIsVerified(userName, role,Status.ACTIVE);
 
 			}
 			catch(Exception e){

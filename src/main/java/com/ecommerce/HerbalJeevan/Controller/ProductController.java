@@ -212,13 +212,14 @@ public class ProductController {
 	
 	@DeleteMapping("/deleteProduct/{id}")
 	public ResponseEntity<?> deleteProduct(@PathVariable String id) {
-		try {
-			productService.deleteProductWithImagesAndPriceList(id);
-			return ResponseEntity.ok().build();
-		} catch (Exception e) {
-			return ResponseEntity.status(500).body("Failed to delete product: " + e.getMessage());
-		}
+			Response<?> res=productService.deleteProductWithImagesAndPriceList(id);
+			if(res.getStatus()) {
+				return ResponseEntity.ok(res);
+			}
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
+		
 	}
+	
 	@PatchMapping("/update-product")
 	public ResponseEntity<?> updateProduct(
 			@RequestParam("productData") String productData,

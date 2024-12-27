@@ -19,7 +19,8 @@ public interface UserRepo extends JpaRepository<UserModel,String> {
 
 	Optional<UserModel> findByusername(String username);
 
-	Optional<UserModel> findByUsernameAndRoleAndIsVerified(String userName, Roles role,Status isVerified);
+	@Query("Select u from UserModel u where (u.username = :username Or u.email=:username) AND u.role = :role AND u.isVerified = :isVerified")
+	UserModel findByUsernameAndRoleAndIsVerified(@Param("username") String username, @Param("role") Roles role, @Param("isVerified") Status isVerified);
 	User findByUserIdAndRoleAndIsVerified(String userId, Roles role,Status isVerified);
 
 

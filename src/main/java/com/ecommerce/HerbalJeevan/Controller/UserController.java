@@ -182,14 +182,12 @@ public class UserController {
 	    
 	    @DeleteMapping("/user/delete-address/{id}")
 	    public ResponseEntity<?> DeleteAddress(@PathVariable String id){
-	    	try {
-	    		userService.deleteAddress(id);
-	    		return ResponseEntity.ok("Address Deleted!!");
-	    	}catch(Exception e) {
-	    		e.printStackTrace();
-	    		return ResponseEntity.badRequest().body("Error while delete!!"+e.getMessage());
-
-	    	}
+	    		Response<?> res=userService.deleteAddress(id);
+	    		if(res.getStatus()) {
+	    			return ResponseEntity.ok(res);
+	    		}
+	    
+	    		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
 	    }
 	    
 	    @GetMapping("/user/get-address")

@@ -287,7 +287,7 @@ public class CartService {
 	
 	public CartResponseDto removeFromCart(String username, String productId) {
 	    // Retrieve user's cart
-		User user=(User) userRepo.findByUsernameAndRoleAndIsVerified(username,Roles.USER,Status.ACTIVE).orElse(null);
+		User user=(User) userRepo.findByUsernameAndRoleAndIsVerified(username,Roles.USER,Status.ACTIVE);
 	    Cart cart = cartRepo.findByUserUserId(user.getUserId()).orElseThrow(() -> new RuntimeException("Cart not found for user: " + username));
 
 	    // Find the cart item by productId

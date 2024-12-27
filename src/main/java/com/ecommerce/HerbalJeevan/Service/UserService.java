@@ -93,9 +93,12 @@ public class UserService {
 	    	
 	    	
 	        // Create user entity based on role
-	        UserModel userEntity = userRepo.findByUsernameAndRoleAndIsVerified(user.getEmail(), role, Status.INACTIVE).orElse((role.equals(Roles.USER)) ? 
+	        UserModel userEntity = userRepo.findByUsernameAndRoleAndIsVerified(user.getEmail(), role, Status.INACTIVE);
+	        
+	        if(userEntity==null) {
+	        userEntity=((role.equals(Roles.USER)) ? 
 		            new User(user.getEmail(), user.getPassword(), user.getEmail(), user.getFirstname(), user.getLastname(), null) :
-			            new Admin(user.getEmail(), user.getPassword(), user.getEmail(), user.getFirstname(), user.getLastname(), null));
+			            new Admin(user.getEmail(), user.getPassword(), user.getEmail(), user.getFirstname(), user.getLastname(), null));}
 	        		
 	        		userEntity.setPassword(user.getPassword());
 
@@ -164,7 +167,7 @@ public class UserService {
 	        // Get role
 
 	        // Find user by username and role
-	        UserModel user = userRepo.findByUsernameAndRoleAndIsVerified(loginDto.getUsername(), role,Status.ACTIVE).orElse(null);
+	        UserModel user = userRepo.findByUsernameAndRoleAndIsVerified(loginDto.getUsername(), role,Status.ACTIVE);
 
 	        // Check if user exists and password matches
 	        if (user != null) {
@@ -220,7 +223,7 @@ public class UserService {
 
 	public boolean verifyUser(String username) {
 		try {
-		UserModel user=userRepo.findByUsernameAndRoleAndIsVerified(username, Roles.USER,Status.INACTIVE ).orElse(null);
+		UserModel user=userRepo.findByUsernameAndRoleAndIsVerified(username, Roles.USER,Status.INACTIVE );
 		if(user!=null) {
 			user.setFlag(true);
 			user.setIsVerified(Status.ACTIVE);
@@ -240,7 +243,7 @@ public class UserService {
 
 	public User getUserDetails(String username) {
 		// TODO Auto-generated method stub
-		return (User)userRepo.findByUsernameAndRoleAndIsVerified(username, Roles.USER, Status.ACTIVE).orElse(null);
+		return (User)userRepo.findByUsernameAndRoleAndIsVerified(username, Roles.USER, Status.ACTIVE);
 	}
 	
 	public Response<?> getUserById(String id) {
@@ -271,18 +274,21 @@ public class UserService {
 		if(username==null) {
 			return null;
 		}
-		// TODO Auto-generated method stub
-		return (User)userRepo.findByUsernameAndRoleAndIsVerified(username, Roles.USER, Status.ACTIVE).orElse(null);
+		UserModel user=userRepo.findByUsernameAndRoleAndIsVerified(username, Roles.USER, Status.ACTIVE);
+		if(user!=null&&user instanceof User) {
+			return (User) user;
+		}
+		return null; 
 	}
 	
 	public Admin getAdminDetails(String username) {
 		// TODO Auto-generated method stub
-		return (Admin)userRepo.findByUsernameAndRoleAndIsVerified(username, Roles.ADMIN, Status.ACTIVE).orElse(null);
+		return (Admin)userRepo.findByUsernameAndRoleAndIsVerified(username, Roles.ADMIN, Status.ACTIVE);
 	}
 
 
 	public boolean verifyAdmin(String username) {try {
-		UserModel user=userRepo.findByUsernameAndRoleAndIsVerified(username, Roles.ADMIN,Status.INACTIVE ).orElse(null);
+		UserModel user=userRepo.findByUsernameAndRoleAndIsVerified(username, Roles.ADMIN,Status.INACTIVE );
 		if(user!=null) {
 			user.setIsVerified(Status.ACTIVE);
 			user.setFlag(true);
@@ -484,11 +490,12 @@ public class UserService {
 
 		public Response<?> updateAddress(UserAddressResponse sellerAddressDTO) {
 			try {
-	        Optional<UserAddress> existingAddressOptional = addressRepo.findById(sellerAddressDTO.getId());
 	    	User seller=getUserDetails();
+	        Optional<UserAddress> existingAddressOptional = addressRepo.findById(sellerAddressDTO.getId());
+
 	        List<UserAddress> existingAddresses = seller.getAddress();
 
-	       
+	       UserAddress updatedAddress=null;
 	        if (existingAddressOptional.isPresent()) {
 	            UserAddress existingAddress = existingAddressOptional.get();
 	           
@@ -496,14 +503,14 @@ public class UserService {
 	            NullAwareBeanUtilsBean util=new NullAwareBeanUtilsBean();
 	            
 	            sellerAddressDTO.setId(existingAddress.getId());
-					util.copyProperties(existingAddresses,sellerAddressDTO);
+					util.copyProperties(existingAddress,sellerAddressDTO);
 				
 	            Set<AddressType> addressTypes = getAddressTypes(sellerAddressDTO);
 	            if (addressTypes!=null&&!addressTypes.isEmpty()) {
 //	            	addressTypes.add(AddressType.DEFAULT);
 	                existingAddress.setAddressTypes(addressTypes);
 	            }
-	            
+	            updatedAddress=existingAddress;
 	            if(existingAddresses!=null&&addressTypes.contains(AddressType.DEFAULT)) {
 	                for (UserAddress address : existingAddresses) {
 	                    Set<AddressType> addressType = address.getAddressTypes();
@@ -515,7 +522,7 @@ public class UserService {
 	                    addressRepo.save(address);
 	                }}
 
-	            UserAddress updatedAddress = addressRepo.save(existingAddress);
+	            addressRepo.saveAll(existingAddresses);
 	            return new Response<>(true,"Address Updated",UserAddressResponse.convertToResponseDTO(updatedAddress));
 	        }
 	        return new Response<>(false,"No address found for this address Id!!");
@@ -554,10 +561,15 @@ public class UserService {
 		}
 
 
-		public void deleteAddress(String id) {
+		public Response<?> deleteAddress(String id) {
 
+			try {
 	        addressRepo.deleteById(id);
-	    
+	        return new Response<>(true,"Address deleted sucessfully","address deleted!!");
+			}
+			catch(Exception e) {
+	        return new Response<>(false,"Error while deleting adderss","error in deleting address "+e.getCause()+" "+e.getMessage());
+			}
 			// TODO Auto-generated method stub
 			
 		}

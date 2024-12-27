@@ -190,18 +190,24 @@ public class ProductServiceImp implements ProductService {
 
 
 	@Override
-	public void deleteProductWithImagesAndPriceList(String id) {
-        Product product = ProductRepo.findByProductId(id).orElse(null);
-        if (product != null) {
-            // Delete associated images
-            List<ProductImage> productImages = product.getImages();
-            for (ProductImage image : productImages) {
-            	imageUploadService.deleteImage(image.getImageUrl());
-            }            
-            ProductRepo.deleteById(product.getId());
-        } else {
-            throw new RuntimeException("Product not found with ID: " + id);
-        }
+	public Response<?> deleteProductWithImagesAndPriceList(String id) {
+		try {
+			 Product product = ProductRepo.findByProductId(id).orElse(null);
+		        if (product != null) {
+		            // Delete associated images
+		            List<ProductImage> productImages = product.getImages();
+		            for (ProductImage image : productImages) {
+		            	imageUploadService.deleteImage(image.getImageUrl());
+		            }            
+		            ProductRepo.deleteById(product.getId());
+		            return new Response<>(true,"Product deleted sucessfully","Product deleted sucessfully");
+		        } else {
+					return new Response<>(false,"Product not found with ID: " + id);
+		        }
+		}catch(Exception e) {
+			return new Response<>(false,"error while deleting product ","error while deleting product "+e.getCause()+" "+e.getMessage());
+		}
+       
     }
 
 	@Override

@@ -24,6 +24,7 @@ import com.ecommerce.HerbalJeevan.Enums.SortOption;
 import com.ecommerce.HerbalJeevan.Model.Admin;
 import com.ecommerce.HerbalJeevan.Model.Product;
 import com.ecommerce.HerbalJeevan.Model.ProductImage;
+import com.ecommerce.HerbalJeevan.Utility.Response;
 
 
 
@@ -64,7 +65,7 @@ public interface ProductService {
 	Set<String> searchCategory(String category, String parentCategory);
 	Set<String> searchCategory(String category);
 	void updateProductSeller();
-	void deleteProductWithImagesAndPriceList(String id);
+	Response<?> deleteProductWithImagesAndPriceList(String id);
 	SingleImageResponse GetSingleProductImage(List<ProductImage> images);
 
 }
