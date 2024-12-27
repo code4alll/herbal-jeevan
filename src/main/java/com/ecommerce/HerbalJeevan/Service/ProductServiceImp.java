@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -25,7 +26,6 @@ import javax.validation.ValidatorFactory;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.BeanUtilsBean;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
@@ -422,49 +422,82 @@ public class ProductServiceImp implements ProductService {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	
 
 	@Override
-	public Page<ProductResponse> getAllProductsWithImages(Pageable pageable, String search, String category,
-			ProductFilterDTO filter, SortOption sort) {
-        Page<Product> products;
-        Long total=0l;
-        if (StringUtils.isNotBlank(search)) {
-            String cleanedQuery = IdGenerator.cleanString(search);
+	 public Page<ProductResponse> getAllProductsWithImages(Pageable pageable, String search, String category, ProductFilterDTO filter, SortOption sort) {
+	     Page<Product> products;
+	     Long total=0l;
+	     if (search == null) {
+	         products = getProductsByCategory(category, pageable);
+	         
+	     } else {
+	         products = getProductsBySearchAndCategory(search, category, pageable);
+	     }   
+	     total=products.getTotalElements();   
+	     List<ProductResponse> productResponses = filterAndSortProducts(products, filter, "india", sort);
 
-//            products = ProductRepo.findByProductNameContainingIgnoreCase(search, pageable);
-            products = ProductRepo.findSimilarProducts( search.toLowerCase(),  pageable);
-            total=products.getTotalElements();
-        }else {
-            products = ProductRepo.findAll(pageable);
-            total=products.getTotalElements();
-
-        }
-        
-        final String country;
-        
-		String username=null;
-	    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 	    
-	    if(authentication.isAuthenticated()&&!authentication.getPrincipal().toString().equalsIgnoreCase("anonymousUser")) {
-	    	
-	    	ClaimedToken user=userService.getAuthenticatedUser(authentication.getPrincipal());
-	    	country=user.getCountry();
-	    	username=user.getUsername();
-	    	
-	    	
-	    }else {
-	    	country="india";
-	    }
+//	     int start = Math.min((int) pageable.getOffset(), productResponses.size());
+//	     int end = Math.min(start + pageable.getPageSize(), productResponses.size());
 
-	    List<ProductResponse> sortedProducts = products.stream()
-                .map(product -> mapToProductResponse(product, country))
-                .sorted(getComparator(sort))
-                .collect(Collectors.toList());
-
-        
-        return new PageImpl<>(sortedProducts, pageable, total);
-        
-	}
+	     return new PageImpl<>(productResponses, pageable, total);
+	 }
+	
+	
+	 private Page<Product> getProductsByCategory(String category, Pageable pageable) {
+	     if (category != null) {
+	         Category categoryEntity = categoryService.findByName(category);
+	         if (categoryEntity != null) {
+	             List<Category> categories = categoryService.getAllSubCategories(categoryEntity);
+	             return ProductRepo.findByCategories(categories, pageable);
+	         }
+	     }
+	        return ProductRepo.findAll(pageable);
+	 }
+	 
+	 private Page<Product> getProductsBySearchAndCategory(String search, String category, Pageable pageable) {
+	     if (category != null) {
+	         Category categoryEntity = categoryService.findByName(category);
+	         if (categoryEntity != null) {
+	             List<Category> categories = categoryService.getAllSubCategories(categoryEntity);
+	             
+	                return ProductRepo.findByCategoriesAndSearchterm(categories, search, pageable);
+	              
+	         }
+	     }
+	    return ProductRepo.findSimilarProducts(search.toLowerCase(), pageable);
+	 }
+	 
+	 private List<ProductResponse> filterAndSortProducts(Page<Product> products, ProductFilterDTO filter, String country, SortOption sort) {
+	     return products.stream()
+	         .map(product -> mapToProductResponse(product, country))
+	         .filter(product -> filter.getCategory() == null || filter.getCategory().isEmpty()
+	                 || filter.getCategory().stream().anyMatch(cat ->
+	                 cat.equalsIgnoreCase(product.getSelectedSupOption())
+	                         || cat.equalsIgnoreCase(product.getSelectedSubOption())
+	                         || cat.equalsIgnoreCase(product.getSelectedMiniSubOption())
+	                         || cat.equalsIgnoreCase(product.getSelectedMicroSubOption())))
+	         .filter(product -> filter.getMinPrice() == null || convertToBigDecimal(product.getSalePrice()).compareTo(filter.getMinPrice()) >= 0)
+	         .filter(product -> filter.getMaxPrice() == null || convertToBigDecimal(product.getOriginalPrice()).compareTo(filter.getMaxPrice()) <= 0)
+	         .filter(product -> filter.getProductName() == null || product.getName().toLowerCase().contains(filter.getProductName().toLowerCase()))
+//	         .filter(product -> filter.getSellerId() == null || product.getAddedBy().equals(filter.getSellerId()))
+//	         .filter(product -> filter.getColor() == null || filter.getColor().isEmpty() || filter.getColor().contains(product.getColors()))
+//	         .filter(product -> filter.getBrand() == null || filter.getBrand().isEmpty() || filter.getBrand().contains(product.getBrandName()))
+//	         .filter(product -> filter.getStockLocation() == null || filter.getStockLocation().isEmpty() || filter.getStockLocation().contains(product.getStockLocation()))
+//	         .filter(product -> filter.getGender() == null || filter.getGender().isEmpty() || filter.getGender().contains(product.getGender()))
+	         .sorted(getComparator(sort))
+	         .collect(Collectors.toList());
+	 }
+	 
+	 private BigDecimal convertToBigDecimal(String price) {
+	        try {
+	            return new BigDecimal(price);
+	        } catch (NumberFormatException e) {
+	            return BigDecimal.ZERO;
+	        }
+	    } 
 
 //	@Override
 //	 public ImageResource fetchImage(String filename) throws Exception {
