@@ -47,10 +47,11 @@ public class SecurityCon extends WebSecurityConfigurerAdapter {
             .and()
             .csrf().disable()
             .authorizeRequests()
-                .antMatchers("/api/admin/**").hasRole("ADMIN")
+                
                 .antMatchers("/api/admin/Login","/api/admin/signup","/api/user/Login","/api/user/signup").permitAll()
                 .antMatchers("/api/product/AddProduct","/api/product/deleteProduct/**","/api/product/update-product/**","/api/order/update-order-status/**").hasRole("ADMIN")
                 .antMatchers("/api/cart/**").hasRole("USER")
+                .antMatchers("/api/admin/**").hasRole("ADMIN")
                 .antMatchers("/api/product/getproducts**","/api/product/product/**","/api/product/autocomplete/**").permitAll()
                 .antMatchers("/api/register","/api/autocomplete","/api/category/autocomplete","/api/category/getproducts","/api/login/google","/api/login/google/callback/**","/api/paypal/**","/api/payment/**","/api/get-currency-rates","/api/sitemap.xml","/api/assign-notification/**","/api/forgot-password/verify").permitAll()
                 .antMatchers("/api/product/getproducts","/api/verifyOtp","/api/product/image/**","/api/update-seller-details","/api/user/doc/**","/api/seller/profile-image/**").permitAll()
