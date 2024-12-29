@@ -317,9 +317,8 @@ public class ProductController {
 	    }
 	 
 	   @PostMapping("/add-review")
-	    public ResponseEntity<?> addReview(@RequestBody ReviewDto req ) {
-		 
-		Response<?> res= productService.addReview(req);
+	    public ResponseEntity<?> addReview(@RequestParam String req,@RequestParam("reviewImage") MultipartFile[] file ) {
+		Response<?> res= productService.addReview(req,file);
 		if(res.getStatus()) {
 			return ResponseEntity.ok().body(res);
 		}
@@ -335,6 +334,8 @@ public class ProductController {
 		}
 		return ResponseEntity.badRequest().body(res);		 
 	 }
+	   
+	  
 	   
 	   
 	   

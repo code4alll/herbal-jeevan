@@ -2,7 +2,10 @@ package com.ecommerce.HerbalJeevan.Model;
 
 import java.time.LocalDateTime;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -12,6 +15,8 @@ import javax.persistence.Table;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+
+import com.ecommerce.HerbalJeevan.Enums.QuestionStatus;
 
 @Entity
 @Table(name="product_question")
@@ -29,13 +34,19 @@ public class ProductQuestion {
 	    @JoinColumn(name = "user_id", nullable = false)
 	    private User user; // Assuming you have a User model for customers
 
-	
+	@Column(name="question",columnDefinition="TEXT")
 	private String question;
+	@Column(name="answer",columnDefinition="TEXT")
 	private String answer;
 	@CreationTimestamp
 	private LocalDateTime createdDate;
 	@UpdateTimestamp
 	private LocalDateTime updatedDate;
+	
+	private String username;
+	
+    @Enumerated(EnumType.STRING)
+	private QuestionStatus status;
 	public Long getId() {
 		return id;
 	}
@@ -77,6 +88,18 @@ public class ProductQuestion {
 	}
 	public void setUpdatedDate(LocalDateTime updatedDate) {
 		this.updatedDate = updatedDate;
+	}
+	public QuestionStatus getStatus() {
+		return status;
+	}
+	public void setStatus(QuestionStatus status) {
+		this.status = status;
+	}
+	public String getUsername() {
+		return username;
+	}
+	public void setUsername(String username) {
+		this.username = username;
 	}
 	
 	

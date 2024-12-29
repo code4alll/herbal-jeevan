@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.ecommerce.HerbalJeevan.Model.Product;
 import com.ecommerce.HerbalJeevan.Model.ProductReview;
 import com.ecommerce.HerbalJeevan.Service.Categorizable;
 
@@ -14,8 +15,8 @@ public class ProductResponse implements Serializable,Categorizable{
 	 */
 	private static final long serialVersionUID = 1L;
 	private String productId;
-    private List<ImageDto> images;
-	private List<ProductReview> reviews;  
+    private List<ImageDto> image;
+	private List<ProductReviewResponse> review;  
 	private String categoryPath; 
     private String stock;
 	private String originalPrice;
@@ -32,23 +33,26 @@ public class ProductResponse implements Serializable,Categorizable{
     private String selectedSubOption;
     private String selectedMiniSubOption;
     private String selectedMicroSubOption;
+    private String overallrating;
+    private String finalStar;
 	public String getProductId() {
 		return productId;
 	}
 	public void setProductId(String productId) {
 		this.productId = productId;
 	}
-	public List<ImageDto> getImages() {
-		return images;
+	public List<ImageDto> getImage() {
+		return image;
 	}
-	public void setImages(List<ImageDto> images) {
-		this.images = images;
+	public void setImage(List<ImageDto> images) {
+		this.image = images;
 	}
-	public List<ProductReview> getReviews() {
-		return reviews;
+	
+	public List<ProductReviewResponse> getReview() {
+		return review;
 	}
-	public void setReviews(List<ProductReview> reviews) {
-		this.reviews = reviews;
+	public void setReview(List<ProductReviewResponse> reviews) {
+		this.review = reviews;
 	}
 	public String getCategoryPath() {
 		return categoryPath;
@@ -153,7 +157,50 @@ public class ProductResponse implements Serializable,Categorizable{
 	public void setSelectedMicroSubOption(String selectedMicroSubOption) {
 		this.selectedMicroSubOption = selectedMicroSubOption;
 	}
+	public String getOverallrating() {
+		return overallrating;
+	}
+	public void setOverallrating(String overallrating) {
+		this.overallrating = overallrating;
+	}
+	public String getFinalStar() {
+		return finalStar;
+	}
+	public void setFinalStar(String finalStar) {
+		this.finalStar = finalStar;
+	}
 
+	
+	public void  calculateOverallRating(Product p) {
+        try {
+            // Parse the string values into integers
+            int oneStar = Integer.parseInt(p.getOneStar()!=null?p.getOneStar():"0");
+            int twoStar = Integer.parseInt(p.getTwoStar()!=null?p.getTwoStar():"0");
+            int threeStar = Integer.parseInt(p.getThreeStar()!=null?p.getThreeStar():"0");
+            int fourStar = Integer.parseInt(p.getFourStar()!=null?p.getFourStar():"0");
+            int fiveStar = Integer.parseInt(p.getFiveStar()!=null?p.getFiveStar():"0");
+
+            // Calculate total ratings
+            int totalRatings = oneStar + twoStar + threeStar + fourStar + fiveStar;
+
+            // Handle division by zero if there are no ratings
+            if (totalRatings == 0) {
+            	this.overallrating="0";
+            	this.finalStar="0";
+            	return;
+            }
+
+            // Calculate weighted sum
+            double weightedSum = (1 * oneStar) + (2 * twoStar) + (3 * threeStar) + (4 * fourStar) + (5 * fiveStar);
+            this.overallrating=String.valueOf(totalRatings);
+            this.finalStar= String.format("%.2f", weightedSum / totalRatings);
+
+        } catch (Exception e) {
+        	this.overallrating="0";
+        	this.finalStar="0";
+        }
+        	
+    }
     
 
 

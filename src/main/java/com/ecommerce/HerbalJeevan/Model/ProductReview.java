@@ -1,13 +1,32 @@
 package com.ecommerce.HerbalJeevan.Model;
 
-import javax.persistence.*;
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import com.ecommerce.HerbalJeevan.Enums.ReviewStatus;
 
 @Entity
-public class ProductReview {
-    @Id
+public class ProductReview implements Serializable{
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -21,17 +40,35 @@ public class ProductReview {
 
     private int rating; // 1 to 5 or any custom range
     private String title;
+    @Column(name="description",columnDefinition = "TEXT")
     private String description;
+    @CreationTimestamp
     private LocalDateTime createdAt;
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
-    private boolean isVerified;
-    private boolean isApproved;
+    @Enumerated(EnumType.STRING)
+    private ReviewStatus status;
+
     private int helpfulCount;
     private String response; // Optional, for product owner reply
-    private boolean isAnonymous;
     private String reviewerName; // Optional
     private LocalDate purchaseDate; // Optional
-    private String location; // Optional
+    private String image1;
+    private String image2;
+    
+    
+	public String getImage1() {
+		return image1;
+	}
+	public void setImage1(String image1) {
+		this.image1 = image1;
+	}
+	public String getImage2() {
+		return image2;
+	}
+	public void setImage2(String image2) {
+		this.image2 = image2;
+	}
 	public Long getId() {
 		return id;
 	}
@@ -80,17 +117,12 @@ public class ProductReview {
 	public void setUpdatedAt(LocalDateTime updatedAt) {
 		this.updatedAt = updatedAt;
 	}
-	public boolean isVerified() {
-		return isVerified;
+	
+	public ReviewStatus getStatus() {
+		return status;
 	}
-	public void setVerified(boolean isVerified) {
-		this.isVerified = isVerified;
-	}
-	public boolean isApproved() {
-		return isApproved;
-	}
-	public void setApproved(boolean isApproved) {
-		this.isApproved = isApproved;
+	public void setStatus(ReviewStatus status) {
+		this.status = status;
 	}
 	public int getHelpfulCount() {
 		return helpfulCount;
@@ -104,12 +136,7 @@ public class ProductReview {
 	public void setResponse(String response) {
 		this.response = response;
 	}
-	public boolean isAnonymous() {
-		return isAnonymous;
-	}
-	public void setAnonymous(boolean isAnonymous) {
-		this.isAnonymous = isAnonymous;
-	}
+	
 	public String getReviewerName() {
 		return reviewerName;
 	}
@@ -122,12 +149,11 @@ public class ProductReview {
 	public void setPurchaseDate(LocalDate purchaseDate) {
 		this.purchaseDate = purchaseDate;
 	}
-	public String getLocation() {
-		return location;
+	public ProductReview() {
+		super();
+		// TODO Auto-generated constructor stub
 	}
-	public void setLocation(String location) {
-		this.location = location;
-	}
+	
 
     // Getters and Setters
     

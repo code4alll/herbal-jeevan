@@ -16,16 +16,23 @@ public class ImageUploadService {
     private Cloudinary cloudinary;
 
     public String uploadImage(MultipartFile file) {
+    	if(file==null||file.isEmpty()) {
+    		return null;
+    	}
         try {
             Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
             return uploadResult.get("secure_url").toString(); // Return the URL of the uploaded image
-        } catch (IOException e) {
-            throw new RuntimeException("Image upload failed", e);
+        } catch (Exception e) {
+        	e.printStackTrace();
+        	return null;
         }
     }
     
     public boolean deleteImage(String imageUrl) {
         try {
+        	if(imageUrl==null) {
+        		return false;
+        	}
             // Extract the public ID from the URL
             String publicId = extractPublicIdFromUrl(imageUrl);
 
@@ -34,8 +41,8 @@ public class ImageUploadService {
 
             // Check if the deletion was successful
             return "ok".equals(deleteResult.get("result"));
-        } catch (IOException e) {
-            throw new RuntimeException("Image deletion failed", e);
+        } catch (Exception e) {
+        	return false;
         }
     }
 

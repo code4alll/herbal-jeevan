@@ -9,6 +9,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,24 +34,26 @@ import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.ecommerce.HerbalJeevan.Config.SecurityConfig.ClaimedToken;
 import com.ecommerce.HerbalJeevan.DTO.FileDetailsVo;
 import com.ecommerce.HerbalJeevan.DTO.ImageDto;
 import com.ecommerce.HerbalJeevan.DTO.ImageResource;
+import com.ecommerce.HerbalJeevan.DTO.PageResponse;
 import com.ecommerce.HerbalJeevan.DTO.ProductFilterDTO;
 import com.ecommerce.HerbalJeevan.DTO.ProductImageDTO;
+import com.ecommerce.HerbalJeevan.DTO.ProductQuestionsResponse;
 import com.ecommerce.HerbalJeevan.DTO.ProductResponse;
+import com.ecommerce.HerbalJeevan.DTO.ProductReviewResponse;
 import com.ecommerce.HerbalJeevan.DTO.ReviewDto;
 import com.ecommerce.HerbalJeevan.DTO.SellerDetailsResponse;
 import com.ecommerce.HerbalJeevan.DTO.SingleImageResponse;
 import com.ecommerce.HerbalJeevan.DTO.SingleProductDTO;
 import com.ecommerce.HerbalJeevan.DTO.imageUploadDTO;
 import com.ecommerce.HerbalJeevan.DTO.productdto;
+import com.ecommerce.HerbalJeevan.Enums.QuestionStatus;
+import com.ecommerce.HerbalJeevan.Enums.ReviewStatus;
 import com.ecommerce.HerbalJeevan.Enums.SortOption;
 import com.ecommerce.HerbalJeevan.Model.Admin;
 import com.ecommerce.HerbalJeevan.Model.Category;
@@ -61,10 +64,13 @@ import com.ecommerce.HerbalJeevan.Model.ProductReview;
 import com.ecommerce.HerbalJeevan.Model.User;
 import com.ecommerce.HerbalJeevan.Repository.CategoryRepository;
 import com.ecommerce.HerbalJeevan.Repository.ImageRepository;
+import com.ecommerce.HerbalJeevan.Repository.ProductQuestionRepository;
 import com.ecommerce.HerbalJeevan.Repository.ProductRepository;
+import com.ecommerce.HerbalJeevan.Repository.ProductReviewRepository;
 import com.ecommerce.HerbalJeevan.Utility.IdGeneratorUtils;
 import com.ecommerce.HerbalJeevan.Utility.NullAwareBeanUtilsBean;
 import com.ecommerce.HerbalJeevan.Utility.Response;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 @Service
@@ -110,6 +116,12 @@ public class ProductServiceImp implements ProductService {
 	
 	@Autowired
 	private ImageUploadService imageUploadService;
+	
+	@Autowired
+	private ProductReviewRepository reviewRepo;
+	
+	@Autowired
+	private ProductQuestionRepository questionRepo;
 
 	@Override
 	public boolean addProduct(productdto productDTO, List<ProductImageDTO> imageDTO, Admin user) throws IOException {
@@ -283,7 +295,7 @@ public class ProductServiceImp implements ProductService {
         		product.setSeller(null);
 	            notNull.copyProperties(response, product);
         		List<ImageDto> img=getImages(product.getImages());
-        		response.setImages(img);
+        		response.setImage(img);
         		response.setCategoryPath(product.getCategory().getUrlSlug());
         		response.setCurrencyname("");
         		response.setSalePrice(product.getSalePrice());
@@ -299,6 +311,9 @@ public class ProductServiceImp implements ProductService {
         			
         			response.setSeller(s);
         		}
+        		response.calculateOverallRating(product);
+        		response.setReview(getProductReviewResponse(product.getReviews()));
+        		response.setQuestion(getProductQuestionResponse(product.getQuestions()));
     			
     			
     		}
@@ -317,6 +332,23 @@ public class ProductServiceImp implements ProductService {
     	}
     	return null;
     }
+	
+	public List<ProductReviewResponse> getProductReviewResponse(List<ProductReview> review) {
+	    if (review == null || review.isEmpty()) {
+	        return null;
+	    }
+	    return review.stream()
+	                 .map(ProductReviewResponse::new) // Calls the constructor with ProductReview as an argument
+	                 .collect(Collectors.toList());
+	}
+	public List<ProductQuestionsResponse> getProductQuestionResponse(List<ProductQuestion> question){
+		 if (question == null || question.isEmpty()) {
+		        return null;
+		    }
+		    return question.stream()
+		                 .map(ProductQuestionsResponse::new) // Calls the constructor with ProductReview as an argument
+		                 .collect(Collectors.toList());
+	}
 
 	@Override
 	public List<ProductImageDTO> getImageDto(MultipartFile[] file) {
@@ -750,11 +782,12 @@ public class ProductServiceImp implements ProductService {
            
     		
     		List<ImageDto> img=getImages(product.getImages());
-    		productResponse.setImages(img);
+    		productResponse.setImage(img);
     		productResponse.setCategoryPath(product.getCategory().getName());
     		productResponse.setCategoryPath(product.getCategoryPath());
     		productResponse.setTime(product.getUpdatedDate());
     		setCategories(productResponse,product.getCategoryPath());
+    		productResponse.calculateOverallRating(product);
     		
     	} catch (IllegalAccessException e1) {
     		// TODO Auto-generated catch block
@@ -926,55 +959,117 @@ public class ProductServiceImp implements ProductService {
     }
 
 
-	public Response<?> addReview(ReviewDto req) {
-		if(req==null||req.getProductId()==null||req.getComment()==null) {
-			return new Response<>(false,"Please fill all the required data!!","Please fill all the required data!!");
-		}
-		try {
-			Product product=ProductRepo.findByProductId(req.getProductId()).orElse(null);
-			User user=userService.getUserDetails();
-			if(product==null) {
-				return new Response<>(false,"Product not found!!","Product not found!!");
-			}
-			ProductReview review=new ProductReview();
-			review.setAnonymous(false);
-			review.setApproved(false);
-			review.setRating(req.getRating());
-			review.setDescription(req.getComment());
-			review.setReviewerName(user.getFirstname()+" "+user.getLastname());
-			review.setUser(user);
-			review.setProduct(product);
-			product.getReviews().add(review);
-			if(req.getRating()==1) {
-				product.setOneStar(getIncreasedRating(product.getOneStar()));
-			}
-			else if(req.getRating()==2) {
-				product.setTwoStar(getIncreasedRating(product.getTwoStar()));
-			}else if(req.getRating()==3) {
-				product.setThreeStar(getIncreasedRating(product.getThreeStar()));
+	public Response<?> addReview(String reviewData, MultipartFile[] files) {
+    try {
+        // Deserialize review data
+        ObjectMapper objectMapper = new ObjectMapper();
+        ReviewDto req = objectMapper.readValue(reviewData, ReviewDto.class);
 
-			}else if(req.getRating()==4) {
-				product.setFourStar(getIncreasedRating(product.getFourStar()));
+        // Validate request data
+        if (req == null || req.getProductId() == null || req.getComment() == null) {
+            return new Response<>(false, "Please fill all the required data!", "Missing required data!");
+        }
 
-			}else if(req.getRating()==5) {
-				product.setFiveStar(getIncreasedRating(product.getFiveStar()));
+        // Process image uploads
+        String[] images = files != null
+                ? Arrays.stream(files).map(imageUploadService::uploadImage).toArray(String[]::new)
+                : new String[0];
 
-			}
-			ProductRepo.save(product);
-			return new Response<>(true,"Review submitted sucessfully!!","Review submitted");
-			
-		}catch(Exception e) {
-			e.printStackTrace();
-			return new Response<>(false,"Error while saving review","Error while saving "+e.getCause()+" "+e.getMessage());
+        // Fetch product and user details
+        Product product = ProductRepo.findByProductId(req.getProductId()).orElse(null);
+        if (product == null) {
+            return new Response<>(false, "Product not found!", "Product not found!");
+        }
+        User user = userService.getUserDetails();
 
-		}
+        // Create review
+        ProductReview review = new ProductReview();
+        review.setStatus(ReviewStatus.PENDING);
+        review.setRating(req.getRating());
+        review.setDescription(req.getComment());
+        review.setReviewerName(user.getFirstname() + " " + user.getLastname());
+        review.setUser(user);
+        review.setProduct(product);
+
+        // Attach images to review
+        if (images.length > 0) review.setImage1(images[0]);
+        if (images.length > 1) review.setImage2(images[1]);
+
+        // Add review to product
+        product.getReviews().add(review);
+
+        // Update product rating counts
+        updateProductRatings(product, req.getRating());
+
+        // Save product with the new review
+        ProductRepo.save(product);
+
+        return new Response<>(true, "Review submitted successfully!", "Review submitted");
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        return new Response<>(false, "Error while saving review", "Error: " + e.getMessage()+" : "+e.getCause());
+    }
+}
+
+	private void updateProductRatings(Product product, int rating) {
+	    switch (rating) {
+	        case 1:
+	            product.setOneStar(getIncreasedRating(product.getOneStar()));
+	            break;
+	        case 2:
+	            product.setTwoStar(getIncreasedRating(product.getTwoStar()));
+	            break;
+	        case 3:
+	            product.setThreeStar(getIncreasedRating(product.getThreeStar()));
+	            break;
+	        case 4:
+	            product.setFourStar(getIncreasedRating(product.getFourStar()));
+	            break;
+	        case 5:
+	            product.setFiveStar(getIncreasedRating(product.getFiveStar()));
+	            break;
+	        default:
+	            throw new IllegalArgumentException("Invalid rating: " + rating);
+	    }
 	}
-	
+
+	private void updateDecreaseProductRatings(Product product, int rating) {
+	    switch (rating) {
+	        case 1:
+	            product.setOneStar(getDeccreasedRating(product.getOneStar()));
+	            break;
+	        case 2:
+	            product.setTwoStar(getDeccreasedRating(product.getTwoStar()));
+	            break;
+	        case 3:
+	            product.setThreeStar(getDeccreasedRating(product.getThreeStar()));
+	            break;
+	        case 4:
+	            product.setFourStar(getDeccreasedRating(product.getFourStar()));
+	            break;
+	        case 5:
+	            product.setFiveStar(getDeccreasedRating(product.getFiveStar()));
+	            break;
+	        default:
+	            throw new IllegalArgumentException("Invalid rating: " + rating);
+	    }
+	}
+
 		private String getIncreasedRating(String old) {
 			if(old==null) {
 				return "1";
 			}else {
 				Integer newval=Integer.valueOf(old)+1;
+				return newval.toString();
+			}
+		}
+		
+		private String getDeccreasedRating(String old) {
+			if(old==null) {
+				return "1";
+			}else {
+				Integer newval=Integer.valueOf(old)-1;
 				return newval.toString();
 			}
 		}
@@ -995,6 +1090,9 @@ public class ProductServiceImp implements ProductService {
 			review.setQuestion(question);
 			review.setProduct(product);
 			review.setUser(user);
+			review.setAnswer("Not yet Replied!!");
+			review.setStatus(QuestionStatus.NOT_REPLIED);
+			review.setUsername(user.getFirstname()+" "+user.getLastname());
 			product.getQuestions().add(review);
 			ProductRepo.save(product);
 			return new Response<>(true,"Question submitted sucessfully!!","Question submitted");
@@ -1005,6 +1103,103 @@ public class ProductServiceImp implements ProductService {
 
 		}
 	}
-	
+
+
+		public Response<?> updateReviewStatus(Long reviewId, ReviewStatus status) {
+			try {
+				reviewRepo.updateReviewStatus(reviewId,status);
+				return new Response<>(true,"Review updated","Review "+status.name());
+
+			}catch(Exception e) {
+				e.printStackTrace();
+				return new Response<>(false,"Error while update",e.getCause()+" : "+e.getMessage());
+			}
+		
+			
+		}
+
+
+		public Response<?> replyQuestion(Long questionId, String message) {
+			try {
+			ProductQuestion question=questionRepo.findById(questionId).orElse(null);
+			if(question==null) {
+				return new Response<>(false,"No response Found for the given id: "+questionId,"No question found!!");
+			}
+				
+			question.setAnswer(message);
+			questionRepo.save(question);
+			return new Response<>(true,"Reply updated Sucessfully","Reply Saved!!");
+			}catch(Exception e) {
+				e.printStackTrace();
+				return new Response<>(false,"Error while Replying",e.getCause()+" : "+e.getMessage());
+			}
+		}
+
+
+		public Response<?> deleteReview(Long reviewId) {
+			try {
+				ProductReview review=reviewRepo.findById(reviewId).orElse(null);
+				if(review==null) {
+					return new Response<>(false,"Reveiew not found","No review found for given id");
+
+				}
+				imageUploadService.deleteImage(review.getImage1());
+				imageUploadService.deleteImage(review.getImage2());
+				updateDecreaseProductRatings(review.getProduct(), review.getRating());
+				ProductRepo.save(review.getProduct());
+				reviewRepo.delete(review);
+				return new Response<>(true,"Review Deleted sucessfully","review deleted");
+				
+			}catch(Exception e) {
+				return new Response<>(false,"error while deleting review","Error: "+e.getCause());
+			}
+
+		}
+
+
+		public Response<?> deleteQuestion(String id) {
+			try {				
+				questionRepo.deleteById(null);
+				return new Response<>(true,"Question Deleted sucessfully","question deleted!!");
+				
+			}catch(Exception e) {
+				return new Response<>(false,"error while deleting question","Error:"+e.getCause());
+			}
+		}
+
+
+		public Response<?> getAdminRviews(String status, Pageable pageable) {
+			ReviewStatus stat=null;
+			if(status!=null&&status.toLowerCase().contains("approved")) {
+				stat=ReviewStatus.APPROVED;
+			}else {
+				stat=ReviewStatus.PENDING;
+			}
+			Page<ProductReviewResponse> rrr=reviewRepo.findAllReview(pageable,stat);
+			PageResponse<ProductReviewResponse> rr= new PageResponse<>(rrr);
+			if(rr==null||rr.getData()==null||rr.getData().isEmpty()) {
+				return new Response<>(false,"No reviews found!!","Reviews not available");
+			}
+			return new Response<>(true,"Review Found!!",rr);
+		}
+
+
+		public Response<?> getAdminQuestions(String status, Pageable pageable) {
+
+			QuestionStatus stat=null;
+			if(status!=null&&status.toLowerCase().equalsIgnoreCase("replied")) {
+				stat=QuestionStatus.REPLIED;
+			}else {
+				stat=QuestionStatus.NOT_REPLIED;
+			}
+			Page<ProductQuestionsResponse> rr=questionRepo.findAllQuestion(pageable,stat);
+			PageResponse<ProductQuestionsResponse> rrr= new PageResponse<>(rr);
+			if(rrr==null||rrr.getData()==null||rrr.getData().isEmpty()) {
+				return new Response<>(false,"No Question found!!","Question not available");
+			}
+			return new Response<>(true,"Question Found!!",rrr);
+		}
+		
+
 
 }

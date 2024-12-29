@@ -3,6 +3,7 @@ package com.ecommerce.HerbalJeevan.DTO;
 import java.io.Serializable;
 import java.util.List;
 
+import com.ecommerce.HerbalJeevan.Model.Product;
 import com.ecommerce.HerbalJeevan.Model.ProductReview;
 import com.ecommerce.HerbalJeevan.Service.Categorizable;
 
@@ -12,8 +13,9 @@ public class SingleProductDTO implements Serializable,Categorizable {
 	 */
 	private static final long serialVersionUID = 3944260352206480875L;
 	private String productId;
-    private List<ImageDto> images;
-	private List<ProductReview> reviews;  
+    private List<ImageDto> image;
+	private List<ProductReviewResponse> review; 
+	private List<ProductQuestionsResponse> question;
 	private String categoryPath; 
     private String stock;
 	private String originalPrice;
@@ -33,6 +35,8 @@ public class SingleProductDTO implements Serializable,Categorizable {
     private String selectedMicroSubOption;
     
     private SellerDetailsResponse seller;
+	private String overallrating;
+	private String finalStar;
 	public String getCurrencyName() {
 		return currencyName;
 	}
@@ -51,18 +55,7 @@ public class SingleProductDTO implements Serializable,Categorizable {
 	public void setProductId(String productId) {
 		this.productId = productId;
 	}
-	public List<ImageDto> getImages() {
-		return images;
-	}
-	public void setImages(List<ImageDto> images) {
-		this.images = images;
-	}
-	public List<ProductReview> getReviews() {
-		return reviews;
-	}
-	public void setReviews(List<ProductReview> reviews) {
-		this.reviews = reviews;
-	}
+
 	public String getCategoryPath() {
 		return categoryPath;
 	}
@@ -162,6 +155,67 @@ public class SingleProductDTO implements Serializable,Categorizable {
 	public void setCurrencyname(String string) {
 		this.currencyName=string;
 		
+	}
+	
+	public void  calculateOverallRating(Product p) {
+        try {
+            // Parse the string values into integers
+            int oneStar = Integer.parseInt(p.getOneStar()!=null?p.getOneStar():"0");
+            int twoStar = Integer.parseInt(p.getTwoStar()!=null?p.getTwoStar():"0");
+            int threeStar = Integer.parseInt(p.getThreeStar()!=null?p.getThreeStar():"0");
+            int fourStar = Integer.parseInt(p.getFourStar()!=null?p.getFourStar():"0");
+            int fiveStar = Integer.parseInt(p.getFiveStar()!=null?p.getFiveStar():"0");
+
+            // Calculate total ratings
+            int totalRatings = oneStar + twoStar + threeStar + fourStar + fiveStar;
+
+            // Handle division by zero if there are no ratings
+            if (totalRatings == 0) {
+            	this.overallrating="0";
+            	this.finalStar="0";
+            	return;
+            }
+
+            // Calculate weighted sum
+            double weightedSum = (1 * oneStar) + (2 * twoStar) + (3 * threeStar) + (4 * fourStar) + (5 * fiveStar);
+            this.overallrating=String.valueOf(totalRatings);
+            this.finalStar= String.format("%.2f", weightedSum / totalRatings);
+
+        } catch (Exception e) {
+        	this.overallrating="0";
+        	this.finalStar="0";
+        }
+        	
+    }
+	public String getOverallrating() {
+		return overallrating;
+	}
+	public void setOverallrating(String overallrating) {
+		this.overallrating = overallrating;
+	}
+	public String getFinalStar() {
+		return finalStar;
+	}
+	public void setFinalStar(String finalStar) {
+		this.finalStar = finalStar;
+	}
+	public List<ImageDto> getImage() {
+		return image;
+	}
+	public void setImage(List<ImageDto> image) {
+		this.image = image;
+	}
+	public List<ProductReviewResponse> getReview() {
+		return review;
+	}
+	public void setReview(List<ProductReviewResponse> review) {
+		this.review = review;
+	}
+	public List<ProductQuestionsResponse> getQuestion() {
+		return question;
+	}
+	public void setQuestion(List<ProductQuestionsResponse> question) {
+		this.question = question;
 	}
     
     
