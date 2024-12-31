@@ -165,7 +165,7 @@ public class AdminController {
 		}
 	 
 	 @DeleteMapping("/delete-question/{id}")
-		public ResponseEntity<?> deleteQuestion(@PathVariable String id ){
+		public ResponseEntity<?> deleteQuestion(@PathVariable Long id ){
 		 return getResponse(productService.deleteQuestion(id));
 			
 		}

@@ -1158,9 +1158,9 @@ public class ProductServiceImp implements ProductService {
 		}
 
 
-		public Response<?> deleteQuestion(String id) {
+		public Response<?> deleteQuestion(Long id) {
 			try {				
-				questionRepo.deleteById(null);
+				questionRepo.deleteById(id);
 				return new Response<>(true,"Question Deleted sucessfully","question deleted!!");
 				
 			}catch(Exception e) {
