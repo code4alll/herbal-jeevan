@@ -60,7 +60,10 @@ public class CartController {
 
      
         CartResponseDto response = cartService.getCartData(email);
-        return ResponseEntity.ok(response);
+        if(response!=null) {
+        	return ResponseEntity.ok(new Response<>(true,"Cart found!!",response));
+        }
+        return ResponseEntity.badRequest().body(new Response<>(false,"cart not found!!","cart not found"));
     }
     
     @GetMapping("/remove-item/{productId}")
@@ -73,7 +76,7 @@ public class CartController {
 
        
 
-        CartResponseDto response = cartService.removeFromCart(email,productId);
+        Response<?> response = cartService.removeFromCart(email,productId);
         return ResponseEntity.ok(response);
     }
     
@@ -88,7 +91,7 @@ public class CartController {
 
        
 
-        CartResponseDto response = cartService.adjustQuantity(email,productId,qty);
+        Response<?> response = cartService.adjustQuantity(email,productId,qty);
         return ResponseEntity.ok(response);
     }
     

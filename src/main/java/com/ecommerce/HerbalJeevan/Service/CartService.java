@@ -285,10 +285,14 @@ public class CartService {
 	}
    
 	
-	public CartResponseDto removeFromCart(String username, String productId) {
+	public Response<?> removeFromCart(String username, String productId) {
 	    // Retrieve user's cart
 		User user=(User) userRepo.findByUsernameAndRoleAndIsVerified(username,Roles.USER,Status.ACTIVE);
-	    Cart cart = cartRepo.findByUserUserId(user.getUserId()).orElseThrow(() -> new RuntimeException("Cart not found for user: " + username));
+	    Cart cart = cartRepo.findByUserUserId(user.getUserId()).orElse(null);
+	    
+	    if(cart==null) {
+	    	return new Response<>(false,"Cart not found for user: " + username,"No cart found!!");
+	    }
 
 	    // Find the cart item by productId
 	    CartItem cartItem = cart.getCartItems().stream()
@@ -310,16 +314,20 @@ public class CartService {
 	        user.setCarts(cart);
 	        userRepo.saveAndFlush(user);
 	        
-			return getCartData(username);
+			return new Response<>(true,"Item removed from cart", getCartData(username));
  
 	    } else {
-	        throw new RuntimeException("Product not found in cart: " + productId);
+	    	return new Response<>(false,"Product not found in cart: " + productId);
 	    }
 	}
 
-	public CartResponseDto adjustQuantity(String username, String productId, int newQuantity) {
+	public Response<?> adjustQuantity(String username, String productId, int newQuantity) {
 	    // Retrieve user's cart
-	    Cart cart = cartRepo.findByUserUserId(UserService.getCurrentUserId()).orElseThrow(() -> new RuntimeException("Cart not found for user: " + username));
+		 Cart cart = cartRepo.findByUserUserId(UserService.getCurrentUserId()).orElse(null);
+		    
+		    if(cart==null) {
+		    	return new Response<>(false,"Cart not found for user: " + username,"No cart found!!");
+		    }
 
 	    // Find the cart item by productId
 	    CartItem cartItem = cart.getCartItems().stream()
@@ -345,10 +353,10 @@ public class CartService {
 	        // Update user's cart
 //	        user.setCarts(cart);
 //	        userRepo.saveAndFlush(user);
-			return getCartData(username);
+			return new Response<>(true,"Item adjusted from cart", getCartData(username));
 
 	    } else {
-	        throw new RuntimeException("Product not found in cart: " + productId);
+	    	return new Response<>(false,"Product not found in cart: " + productId);
 	    }
 	}
 
