@@ -1127,6 +1127,7 @@ public class ProductServiceImp implements ProductService {
 			}
 				
 			question.setAnswer(message);
+			question.setStatus(QuestionStatus.REPLIED);
 			questionRepo.save(question);
 			return new Response<>(true,"Reply updated Sucessfully","Reply Saved!!");
 			}catch(Exception e) {

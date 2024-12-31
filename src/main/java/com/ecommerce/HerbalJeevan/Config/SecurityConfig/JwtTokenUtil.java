@@ -26,7 +26,7 @@ public class JwtTokenUtil {
 	    private String jwtSecret;
 
 	    @Value("${jwt.expiration}") // Replace with your preferred token expiration time
-	    private int jwtExpirationMs;
+	    private Long jwtExpirationMs;
 	    
 	    @Autowired
         UserRepo userRepo;
@@ -45,7 +45,7 @@ public class JwtTokenUtil {
 	    	String token = Jwts.builder()
 	    			
 	                .setIssuedAt(new Date())
-	                .setExpiration(new Date(new Date().getTime() + jwtExpirationMs))
+	                .setExpiration(new Date(new Date().getTime() + (jwtExpirationMs*100)))
 	                .signWith(SignatureAlgorithm.HS512, jwtSecret)
 	                .claim("Role", role)
 	                .claim("Email", email)
