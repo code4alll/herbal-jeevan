@@ -29,11 +29,10 @@ import com.ecommerce.HerbalJeevan.Utility.Response;
 public class OrderController {
 	@Autowired
 	OrderService orderService;
-	  @Autowired
-	    JwtTokenUtil jwtTokenProvider;
-	  
-	    @Autowired
-	    UserService userService;
+	@Autowired
+	JwtTokenUtil jwtTokenProvider;  
+	@Autowired
+	UserService userService;
 
 	    
 	    

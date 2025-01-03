@@ -111,11 +111,11 @@ public class OrderService {
  
     	}
     	UserAddress deliveryAddress=userAddressRepo.findById(addressId).orElse(null);
-    	
-    	
-            order = convertCartToOrder(cart);
-
-    	
+    	if(deliveryAddress==null) {
+            return new Response<>(true,"order not created!!","Delivery address not found for given address id!!");
+ 
+    	}
+        order = convertCartToOrder(cart); 	
         if(order==null) {
             return new Response<>(true,"order not created!!","No items in cart!!");
 
@@ -134,8 +134,8 @@ public class OrderService {
         }
         
         //it is enable while we not get razorpay
-        transaction.setOrderId(order.getOrderId());
-        return new Response<>(true,"ord	er created",transaction);
+//        transaction.setOrderId(order.getOrderId());
+        return new Response<>(true,"order created",transaction);
 
        
 //        return new Response<>(true,"order created","Order Id: "+order.getOrderid());
@@ -149,10 +149,7 @@ public class OrderService {
     		e.printStackTrace();
     		return new Response<>(false,"order creation failled!!",e.getMessage());
     	}
-        // Clear the cart
-//        cartService.clearCart(userEmail);
 
-//        return order;
     }
     
     

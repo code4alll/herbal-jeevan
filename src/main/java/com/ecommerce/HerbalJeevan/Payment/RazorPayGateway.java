@@ -87,11 +87,11 @@ public class RazorPayGateway implements PaymentGateway {
 			int amountInPaise = (int) Math.round(paymentRequest.getAmount() * 100);
 			jsonObj.put("amount",amountInPaise);
 			jsonObj.put("currency", paymentRequest.getCurrency());
-//			RazorpayClient razorpayClient= new RazorpayClient(keys,keySecret);
-//			Order order=razorpayClient.orders.create(jsonObj);
-//			return prepareTransaction(order);
+			RazorpayClient razorpayClient= new RazorpayClient(keys,keySecret);
+			Order order=razorpayClient.orders.create(jsonObj);
+			return prepareTransaction(order);
 
-			return prepareTransaction(paymentRequest);
+//			return prepareTransaction(paymentRequest);
 		} catch (Exception e) {
 			
 			e.printStackTrace();
